@@ -59,7 +59,7 @@ def visionbird_scan_and_simulate(test_url):
         browser.close()
 
     import PIL.Image
-    img = PIL.Image.open(screenshot_path)
+    img = PIL.Image.open("visionbird_rapor.png")
     
     # Yapay zekaya verdiğimiz komutu biraz daha detaylandıralım
     prompt = """
