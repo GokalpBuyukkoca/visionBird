@@ -27,3 +27,8 @@ jobs:
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # Sırrı kasadan çıkarıyoruz
       run: python visionbird_core.py
+    - name: Bozuk Arayüz Fotoğrafını Sakla
+      uses: actions/upload-artifact@v4
+      with:
+        name: visionbird-kanit-dosyasi
+        path: visionbird_rapor.png
