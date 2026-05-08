@@ -55,7 +55,7 @@ def visionbird_scan_and_simulate(test_url):
         # -----------------------------------------------------------
 
         print("📸 visionBird 'bozuk' arayüzün kuş bakışı görüntüsünü alıyor...")
-        page.screenshot(path=screenshot_path, full_page=True)
+        page.screenshot(path="visionbird_rapor.png", full_page=True)
         browser.close()
 
     import PIL.Image
