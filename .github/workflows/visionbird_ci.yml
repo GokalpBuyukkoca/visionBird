@@ -1,0 +1,29 @@
+name: visionBird Otonom Test
+
+on:
+  push:
+    branches: [ "main", "master" ] # Projeye kod gönderildiğinde çalışır
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Kodu Çek
+      uses: actions/checkout@v4
+
+    - name: Python Kurulumu
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Kütüphaneleri Yükle
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest-playwright google-genai pillow
+        playwright install --with-deps chromium
+
+    - name: visionBird'ü Havalandır
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # Sırrı kasadan çıkarıyoruz
+      run: python visionbird_core.py
