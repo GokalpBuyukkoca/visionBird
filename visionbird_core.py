@@ -77,7 +77,7 @@ def visionbird_scan_and_simulate(test_url):
     
     # Analizi gönderiyoruz
     response = client.models.generate_content(
-        model='gemini-1.5-pro', # Görsel QA (Kalite Güvence) için en güçlü model
+        model='gemini-2.0-flash',
         contents=[prompt, img]
     )
     
