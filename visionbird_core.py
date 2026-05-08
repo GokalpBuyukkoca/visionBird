@@ -3,34 +3,19 @@ from playwright.sync_api import sync_playwright
 from google import genai
 import time
 
-# API anahtarını koddan değil, GitHub'ın güvenli kasasından çekiyoruz
-api_anahtari = os.environ.get("GEMINI_API_KEY")
-client = genai.Client(api_key=api_anahtari)
-
-# ... (Kodun geri kalanı aynı kalıyor)
-
 def visionbird_scan_and_simulate(test_url):
     print(f"🦅 visionBird havalandı. Hedef taranıyor: {test_url}")
-    # Gerçek fotoğraftan ayırt etmek için ismini değiştirelim
-    screenshot_path = "visionbird_HATA_SIMULASYONU.png" 
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True) 
-        # Güvenlik kalkanını (CSP) aşmak için özel yetki veriyoruz:
         page = browser.new_page(bypass_csp=True)
         
-        
-        # Sitenin orijinaline gidiyoruz
         page.goto(test_url)
-        # Sayfanın yüklenmesi için bekleyelim
         page.wait_for_selector("h1") 
         time.sleep(2) 
 
         print("\n💥 [SİMÜLASYON] visionBird arayüze sızıyor ve hata simüle ediyor...")
         
-        # --- BURASI KRİTİK: CANLI SAYFAYA HATA ENJEKTE EDİYORUZ ---
-        # Sadece bu tarayıcı oturumunda geçerli olacak CSS müdahalesi:
-        # H1 başlığını devasa yap ve butonu kırmızı yapıp üzerine bindir.
         css_sabotaji = """
             h1 {
                 font-size: 150px !important;
@@ -50,18 +35,16 @@ def visionbird_scan_and_simulate(test_url):
             }
         """
         page.add_style_tag(content=css_sabotaji)
-        # Değişikliklerin uygulanması için yarım saniye bekle
         time.sleep(0.5) 
-        # -----------------------------------------------------------
 
         print("📸 visionBird 'bozuk' arayüzün kuş bakışı görüntüsünü alıyor...")
         page.screenshot(path="visionbird_rapor.png", full_page=True)
         browser.close()
 
+    # --- FOTOĞRAF ÇEKİLDİ, ŞİMDİ YAPAY ZEKAYA OKUTUYORUZ ---
     import PIL.Image
     img = PIL.Image.open("visionbird_rapor.png")
     
-    # Yapay zekaya verdiğimiz komutu biraz daha detaylandıralım
     prompt = """
     Sen visionBird adında, Frontend UI/UX testlerinde uzmanlaşmış keskin gözlü bir yapay zeka QA mühendisisin. 
     Sana bir web sitesinin ekran görüntüsünü veriyorum. Lütfen bu görüntüyü piksel piksel incele ve bir insan tester gibi şu görsel hataları (Visual Bugs) raporla:
@@ -75,8 +58,11 @@ def visionbird_scan_and_simulate(test_url):
     
     print("🧠 visionBird bozuk arayüzü analiz ediyor... (Bu biraz sürebilir)\n")
     
-    # Gerçek API'ye bağlanmayı deniyoruz
     try:
+        # API anahtarını tam yapay zekaya bağlanmadan önce kasadan alıyoruz
+        api_anahtari = os.environ.get("GEMINI_API_KEY")
+        client = genai.Client(api_key=api_anahtari)
+        
         response = client.models.generate_content(
             model='gemini-2.0-flash',
             contents=[prompt, img]
@@ -86,7 +72,6 @@ def visionbird_scan_and_simulate(test_url):
         print(response.text)
         print("-" * 40)
         
-    # Eğer Google API kotası (limit 0) veya başka bir hata verirse sistemi çökertme, Mock (Yedek) raporu bas!
     except Exception as e:
         print(f"⚠️ API Bağlantısı Reddedildi (Hata: {e})")
         print("🔄 visionBird 'Mocking' (Yedek Simülasyon) moduna geçiyor...\n")
@@ -98,4 +83,9 @@ def visionbird_scan_and_simulate(test_url):
         print("3. Genel Görsel Kalite: Arayüz tamamen kullanılamaz durumda. CSS düzenlemesi acilen geri alınmalı.")
         print("-" * 40)
         
-    print(f"💡 İncelemek istersen çektiğimiz bozuk fotoğraf bulut sunucusunda kaydedildi.")
+    print("💡 İncelemek istersen çektiğimiz bozuk fotoğraf bulut sunucusunda kaydedildi.")
+
+# =====================================================================
+# İŞTE BÜTÜN SORUNU ÇÖZEN, MOTORU ÇALIŞTIRAN ANAHTAR:
+visionbird_scan_and_simulate("https://iceberg-digital.co.uk/")
+# =====================================================================
