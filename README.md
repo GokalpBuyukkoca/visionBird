@@ -1,35 +1,32 @@
-# 🦅 visionBird: Otonom UI/UX Kalite Güvence (QA) Asistanı
+# 🦅 visionBird — Otonom UI/UX Kalite Güvence (QA) Asistanı
 
-visionBird, modern web uygulamalarının arayüz (UI) ve kullanıcı deneyimi (UX) testlerini otomatize etmek için geliştirilmiş yapay zeka destekli bir QA (Kalite Güvence) botudur. 
+visionBird, web sitelerinizin görsel, yapısal ve erişilebilirlik kalitesini saniyeler içinde analiz eden yapay zeka destekli yeni nesil bir QA platformudur. Sadece bir URL girin; arkanıza yaslanın ve insan hassasiyetindeki yapay zekanın sitenizi denetlemesini izleyin.
 
-Geleneksel testlerin aksine sadece kodları değil, sayfanın **görsel bütünlüğünü** de tıpkı bir insan gözüyle analiz eder, hataları kanıtlar ve detaylı raporlar sunar.
+## ✨ Öne Çıkan Özellikler
 
-## 🚀 Öne Çıkan Özellikler
+### 🎨 Silikon Vadisi Standartlarında Premium Arayüz (Frontend)
+visionBird sadece arka planda çalışan güçlü bir motor değil, aynı zamanda göz alıcı bir üründür (SaaS). 
+* **Modern ve Akıcı Tasarım:** Kullanıcı deneyimini zirveye taşıyan, Apple ve Stripe arayüzlerinden ilham alan minimalist, koyu temalı ve animasyonlu premium vitrin.
+* **Ürün Turu ve Metrikler:** Analiz sonuçlarını basit bir metin olarak değil; şık metrik kartları, tarama özetleri ve AI içgörüleri ile sunan interaktif raporlama ekranı.
+* **Tam Uyumlu (Responsive):** İster devasa bir monitörde, ister cep telefonunda kusursuz çalışan, sıfır framework (saf HTML/CSS/JS) ile yazılmış ışık hızında frontend mimarisi.
 
-* **🤖 Otonom Test Süreci (CI/CD):** GitHub Actions entegrasyonu sayesinde kod her güncellendiğinde testler bulut sunucularında otomatik olarak tetiklenir.
-* **💥 Görsel Hata Simülasyonu:** Canlı ortamlarda karşılaşılabilecek potansiyel UI çökmelerini (üst üste binen elementler, bozulan CSS'ler) sayfaya dinamik stil enjekte ederek test eder.
-* **📸 Kuş Bakışı Kanıt Toplama:** Playwright motorunu kullanarak sayfanın boydan boya (full-page) ekran görüntüsünü alır ve bunu bir `.png` artefaktı (kanıtı) olarak buluta kaydeder.
-* **🧠 Yapay Zeka ile Piksel Analizi:** Toplanan görsel kanıtlar Google Gemini 2.0 Flash Vision modeline gönderilir. Yapay zeka, metin okunabilirliği, element yerleşimi ve marka bütünlüğü gibi konularda acımasız ve detaylı bir analiz raporu yazar.
-* **🛡️ Güvenlik Kalkanı (Mocking):** Beklenmedik API kesintilerinde veya kota aşımlarında (Rate Limit) sistem çökmez; otomatik olarak "Yedek Simülasyon" moduna geçerek test sürecini başarıyla tamamlar (Fail-safe mekanizması).
+### 🤖 Yapay Zeka Beyni ve Otonom Tarama (Backend)
+* **Playwright ile Sızma:** Sitenize otonom bir şekilde girer, JavaScript'i çalıştırır ve tam sayfa yüksek çözünürlüklü ekran görüntüsü alır.
+* **Gemini 2.0 Flash Entegrasyonu:** Çekilen fotoğrafı milisaniyeler içinde işler; metin taşmalarını, kontrast hatalarını, üst üste binen elementleri ve marka bütünlüğünü bozan unsurları tespit eder.
+* **🛡️ Kalkan Mekanizması (Fail-Safe):** API hız sınırlarına (Örn: 429 Kotası) veya bağlantı kopmalarına karşı sistemin çökmesini engelleyen otonom yedek raporlama sistemi.
+* **🧪 Hata Simülasyon Modu:** Sitenizi bilerek manipüle edip (CSS sabotajı) yapay zekanın hataları yakalama yeteneğini test etmenizi sağlayan özel geliştirici "Sabotaj" düğmesi.
 
 ## 🛠️ Kullanılan Teknolojiler
 
-* **Dil:** Python 3.x
-* **Tarayıcı Otomasyonu:** Playwright (Chromium - Headless)
-* **Yapay Zeka:** Google GenAI (Gemini 2.0 Flash)
-* **Görüntü İşleme:** PIL (Pillow)
-* **Bulut / CI-CD:** GitHub Actions & Artifacts
+* **Frontend:** HTML5, CSS3, Vanilla JavaScript, SVG Vektör Grafikleri
+* **Backend:** Python 3.x, FastAPI, Uvicorn
+* **Otomasyon & Analiz:** Playwright (Chromium Headless), Google GenAI SDK (Gemini Vision)
 
-## ⚙️ Nasıl Çalışır?
+## 🚀 Kurulum ve Çalıştırma (Lokal Ortam)
 
-1. **Uçuş (Tetiklenme):** GitHub sunucusu Ubuntu tabanlı bir sanal makine ayağa kaldırır.
-2. **Sızma & Simülasyon:** Hedeflenen URL'ye (Örn: Iceberg Digital) girilir, güvenlik duvarları geçilir (bypass_csp) ve sayfaya hatalı CSS kodları enjekte edilir.
-3. **Kanıt Kaydı:** Bozulmuş arayüzün yüksek çözünürlüklü ekran görüntüsü `visionbird_rapor.png` adıyla kaydedilir.
-4. **Analiz:** Yapay zeka veya yedek mock sistemi bu kanıtı inceleyip detaylı bir **Hata Analiz Raporu** oluşturur.
-5. **Raporlama:** Tüm analiz loglara yazdırılır ve fotoğraf dosyası Actions sekmesinde indirilebilir bir paket (Artifact) olarak sunulur.
+Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyin:
 
-## 💡 Kullanım Senaryosu
-Bu araç, bir Frontend geliştiricisinin yaptığı ufak bir kod değişikliğinin sayfanın başka bir yerindeki tasarımı (marka renkleri, buton pozisyonları, okunabilirlik vb.) bozup bozmadığını **yayına almadan önce** otonom olarak denetlemek için tasarlanmıştır.
-
----
-*Geliştirici:* Gökalp Büyükkoca
+**1. Projeyi Klonlayın ve Klasöre Girin:**
+```bash
+git clone [https://github.com/GokalpBuyukkoca/visionBird-main.git](https://github.com/GokalpBuyukkoca/visionBird-main.git)
+cd visionBird-main
