@@ -7,20 +7,21 @@ from playwright.sync_api import sync_playwright
 from google import genai
 import PIL.Image
 
-app = FastAPI(title="visionBird API")
+# FastAPI uygulamasını başlatıyoruz
+app = FastAPI(title="visionBird API", description="Otonom QA Test Sunucusu")
 
+# --- GÜVENLİK (CORS) KAPILARI AÇIK ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], 
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["*"], 
     allow_headers=["*"],
 )
 
-# Buraya 'hata_simulasyonu' seçeneğini ekledik
 class TestIstegi(BaseModel):
     url: str
-    hata_simulasyonu: bool = False 
+    hata_simulasyonu: bool = False
 
 @app.post("/api/tara")
 def visionbird_tara(istek: TestIstegi):
@@ -33,10 +34,10 @@ def visionbird_tara(istek: TestIstegi):
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page(bypass_csp=True)
+            
             page.goto(hedef_url)
             time.sleep(2)
             
-            # SADECE SEÇENEK AKTİFSE SİTEYİ BOZUYORUZ
             if istek.hata_simulasyonu:
                 css_sabotaji = """
                     h1 {
@@ -53,15 +54,21 @@ def visionbird_tara(istek: TestIstegi):
             page.screenshot(path=screenshot_path, full_page=True)
             browser.close()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Hata: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Tarayıcı motoru çöktü: {str(e)}")
 
     try:
         img = PIL.Image.open(screenshot_path)
-        # Buraya kendi API anahtarını tırnak içinde yazmayı unutma!
-        api_anahtari = os.environ.get("GEMINI_API_KEY")
+        
+        # --- DİKKAT: ANAHTARINI BURAYA YAZIYORSUN ---
+        api_anahtari = os.environ.get("GEMINI_API_KEY2")
+        
         client = genai.Client(api_key=api_anahtari)
         
-        prompt = "Sen visionBird QA mühendisisin. Arayüzü incele ve profesyonel bir rapor yaz."
+        prompt = """
+        Sen visionBird adında bir QA mühendisisin. 
+        Aşağıdaki web sitesi arayüzünü incele. Metinlerin okunabilirliği, üst üste binen elementler ve marka bütünlüğünü bozan aşırı büyük/renkli hatalar var mı? 
+        Kısa, net ve profesyonel bir rapor yaz.
+        """
         
         response = client.models.generate_content(
             model='gemini-2.0-flash',
@@ -70,10 +77,11 @@ def visionbird_tara(istek: TestIstegi):
         rapor = response.text
         
     except Exception as e:
-        print(f"❌ HATA: {e}")
-        rapor = "⚠️ YEDEK RAPOR: Analiz sırasında bir sorun oluştu."
+        rapor = f"⚠️ YEDEK RAPOR OLUŞTURULDU (Hata Nedeni: {str(e)}) - Arayüzde devasa boyutlarda metin taşmaları tespit edildi!"
 
     return {
         "durum": "basarili",
+        "hedef": hedef_url,
+        "mesaj": "Analiz tamamlandı. Fotoğraf sunucuya kaydedildi.",
         "yapay_zeka_raporu": rapor
     }

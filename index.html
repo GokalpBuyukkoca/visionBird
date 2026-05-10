@@ -1,104 +1,2007 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>visionBird | Otonom QA Asistanı</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; padding: 2rem; display: flex; flex-direction: column; align-items: center; }
-        h1 { color: #38bdf8; font-size: 2.5rem; margin-bottom: 0.5rem; }
-        p { color: #94a3b8; margin-bottom: 2rem; }
-        .search-box { display: flex; width: 100%; max-width: 600px; gap: 10px; margin-bottom: 1rem; }
-        input[type="text"] { flex: 1; padding: 1rem; border-radius: 8px; border: 1px solid #334155; background-color: #1e293b; color: white; font-size: 1rem; outline: none; }
-        input[type="text"]:focus { border-color: #38bdf8; }
-        button { padding: 1rem 2rem; border-radius: 8px; border: none; background-color: #38bdf8; color: #0f172a; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
-        button:hover { background-color: #0ea5e9; }
-        button:disabled { background-color: #475569; cursor: not-allowed; }
-        
-        .toggle-container { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; width: 100%; max-width: 600px; }
-        .toggle-container input { width: 18px; height: 18px; cursor: pointer; }
-        .toggle-container label { color: #94a3b8; font-size: 0.95rem; cursor: pointer; user-select: none; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="visionBird — Yapay zeka destekli otonom QA test platformu. Web sitenizin tasarımını saniyeler içinde analiz eder.">
+<meta name="theme-color" content="#000000">
+<title>visionBird — Otonom QA Testi</title>
+<style>
+/* ============================================================
+   TOKENS
+============================================================ */
+:root{
+  --fd:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  --ft:'SF Pro Text',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  --bk:#000;--wh:#fff;--gr:#f5f5f7;
+  --bl:#0071e3;--bl2:#0077ed;--mu:#86868b;
+  --bd:rgba(0,0,0,.1);
+  --nh:52px; /* nav height */
+}
 
-        .result-container { width: 100%; max-width: 800px; background-color: #1e293b; padding: 2rem; border-radius: 12px; display: none; border: 1px solid #334155; }
-        .report-text { white-space: pre-wrap; line-height: 1.6; color: #cbd5e1; background: #0f172a; padding: 1.5rem; border-radius: 8px; font-family: monospace; }
-        .loader { display: none; color: #38bdf8; font-weight: bold; margin-bottom: 1rem; font-size: 1.2rem; }
-    </style>
+/* ============================================================
+   RESET
+============================================================ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--ft);background:var(--wh);color:var(--bk);
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:var(--ft);-webkit-tap-highlight-color:transparent}
+ul{list-style:none}
+img{max-width:100%;display:block}
+input,textarea{font-family:var(--ft)}
+
+/* ============================================================
+   FADE-UP ANIMATION (CSS-first, no GSAP dependency)
+============================================================ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sc{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes barGrow{from{height:0;y:attr(data-y)}to{}}
+
+.fu{opacity:0;transform:translateY(28px);will-change:opacity,transform}
+.fu.vis{animation:fadeUp .65s cubic-bezier(.16,1,.3,1) forwards}
+/* Staggered delays */
+.fd1{animation-delay:.05s}.fd2{animation-delay:.1s}.fd3{animation-delay:.15s}
+.fd4{animation-delay:.2s}.fd5{animation-delay:.25s}.fd6{animation-delay:.3s}
+
+@media(prefers-reduced-motion:reduce){
+  .fu,.fu.vis{animation:none;opacity:1;transform:none}
+}
+
+/* ============================================================
+   ANNOUNCEMENT BAR
+============================================================ */
+#ann{
+  background:var(--gr);text-align:center;
+  padding:.55rem 3rem;font-size:.76rem;
+  border-bottom:.5px solid rgba(0,0,0,.08);
+  position:relative;line-height:1.4;
+}
+#ann a{color:var(--bl);font-weight:500}
+#ann a:hover{text-decoration:underline}
+.ann-x{
+  position:absolute;right:1rem;top:50%;transform:translateY(-50%);
+  background:none;border:none;font-size:1.1rem;color:var(--mu);
+  line-height:1;padding:.25rem .4rem;min-width:32px;min-height:32px;
+  display:flex;align-items:center;justify-content:center;
+}
+.ann-x:hover{color:var(--bk)}
+
+/* ============================================================
+   NAVBAR
+============================================================ */
+#nav{
+  position:sticky;top:0;z-index:800;
+  height:var(--nh);
+  background:rgba(255,255,255,.82);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:.5px solid rgba(0,0,0,.09);
+  display:flex;align-items:center;
+}
+.nav-in{
+  max-width:1280px;margin:0 auto;padding:0 1.5rem;
+  width:100%;display:flex;align-items:center;gap:.5rem;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:.5rem;
+  flex-shrink:0;margin-right:1.5rem;
+}
+.nav-logo-t{font-family:var(--fd);font-size:1.05rem;font-weight:600;letter-spacing:-.01em}
+.nav-ul{display:flex;align-items:center;gap:.05rem;flex:1}
+.nav-li{position:relative}
+.nav-btn{
+  font-size:.78rem;color:var(--bk);padding:.35rem .7rem;
+  border-radius:6px;display:flex;align-items:center;gap:.25rem;
+  transition:color .2s;white-space:nowrap;
+  background:none;border:none;min-height:32px;
+}
+.nav-btn:hover{color:var(--bl)}
+.chv{font-size:.55rem;transition:transform .22s cubic-bezier(.4,0,.2,1);display:inline-block}
+.nav-li:hover .chv{transform:rotate(180deg)}
+
+/* MEGA MENU */
+.mega{
+  position:absolute;top:calc(100% + 5px);left:0;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:.5px solid rgba(0,0,0,.1);
+  border-radius:20px;
+  box-shadow:0 16px 52px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.05);
+  padding:1.25rem;
+  opacity:0;visibility:hidden;transform:translateY(-5px);
+  transition:opacity .2s,transform .2s,visibility .2s;
+  pointer-events:none;
+  /* prevent lag by promoting to own layer */
+  will-change:opacity,transform;
+}
+.nav-li:hover>.mega{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
+.mega-p{min-width:680px}.mega-d{min-width:500px}.mega-c{min-width:520px}.mega-s{min-width:260px}
+
+/* mega internals */
+.mg2{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.mg3{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:1.2rem}
+.m-row{
+  display:flex;align-items:flex-start;gap:.8rem;
+  padding:.5rem .4rem;border-radius:12px;
+  transition:background .18s;cursor:pointer;margin-bottom:.2rem;
+}
+.m-row:hover{background:var(--gr)}
+.m-ico{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ico-g{background:rgba(0,180,100,.1)}.ico-b{background:rgba(0,113,227,.1)}
+.ico-o{background:rgba(255,149,0,.1)}.ico-v{background:rgba(88,86,214,.1)}
+.m-ico svg{width:18px;height:18px}
+.mt{font-family:var(--fd);font-size:.84rem;font-weight:600;margin-bottom:.18rem;letter-spacing:-.01em}
+.md{font-family:var(--ft);font-size:.71rem;color:var(--mu);line-height:1.4}
+.msub{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:.12rem .8rem;margin-top:.4rem;padding-left:3rem;
+}
+.msl{
+  display:flex;align-items:center;gap:.35rem;
+  font-size:.75rem;color:var(--mu);padding:.25rem .2rem;
+  border-radius:5px;transition:color .18s;
+}
+.msl:hover{color:var(--bl)}
+.msl svg{width:13px;height:13px;opacity:.5;flex-shrink:0}
+.msl:hover svg{opacity:1}
+.msep{border:none;border-top:.5px solid rgba(0,0,0,.07);margin:.8rem 0}
+.mlk{font-size:.74rem;color:var(--bl);display:block;margin-top:.4rem}
+.mlk:hover{text-decoration:underline}
+.mpl{display:flex;flex-direction:column;gap:.2rem;margin-top:.4rem;padding-left:3rem}
+.mpl a{font-size:.75rem;color:var(--mu);display:flex;align-items:center;gap:.35rem;padding:.18rem 0;transition:color .18s}
+.mpl a::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0}
+.mpl a:hover{color:var(--bl)}
+/* community social */
+.csoc{display:flex;gap:.65rem;flex-wrap:wrap;padding-top:.7rem;border-top:.5px solid rgba(0,0,0,.07)}
+.sl{display:flex;align-items:center;gap:.32rem;font-size:.74rem;color:var(--mu);transition:color .18s}
+.sl svg{width:15px;height:15px}
+.sl:hover{color:var(--bl)}
+
+/* nav right */
+.nav-r{display:flex;align-items:center;gap:.45rem;margin-left:auto;flex-shrink:0}
+.btn-ghost{
+  font-size:.78rem;color:var(--bk);background:none;border:none;
+  padding:.35rem .7rem;border-radius:6px;transition:color .18s;
+  white-space:nowrap;min-height:32px;
+}
+.btn-ghost:hover{color:var(--bl)}
+.btn-pill{
+  font-size:.78rem;font-weight:500;color:var(--wh);
+  background:var(--bl);border:none;padding:.38rem .9rem;
+  border-radius:980px;transition:background .18s;white-space:nowrap;
+  min-height:32px;
+}
+.btn-pill:hover{background:var(--bl2)}
+.ham{display:none;background:none;border:none;padding:.35rem;color:var(--bk);min-width:40px;min-height:40px;align-items:center;justify-content:center}
+
+/* ============================================================
+   MOBILE OVERLAY
+============================================================ */
+#mob{
+  position:fixed;inset:0;z-index:790;
+  background:rgba(255,255,255,.98);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  padding:calc(var(--nh) + 1.5rem) 1.5rem 2rem;
+  flex-direction:column;gap:0;overflow-y:auto;
+  display:none;-webkit-overflow-scrolling:touch;
+}
+#mob.open{display:flex}
+.mob-it{
+  font-family:var(--fd);font-size:1.5rem;font-weight:600;
+  padding:.7rem 0;border-bottom:.5px solid rgba(0,0,0,.07);
+  display:flex;justify-content:space-between;align-items:center;
+  color:var(--bk);
+}
+.mob-auth{display:flex;gap:.75rem;margin-top:1.75rem}
+.mob-auth .btn-pill{flex:1;padding:.75rem;font-size:.9rem;border-radius:980px;border:none;text-align:center}
+.btn-od{
+  flex:1;padding:.75rem;font-size:.9rem;border-radius:980px;
+  border:1.5px solid var(--bk);background:none;color:var(--bk);transition:all .18s;text-align:center;
+}
+.btn-od:hover{background:var(--bk);color:var(--wh)}
+
+/* ============================================================
+   HERO
+============================================================ */
+#hero{
+  position:relative;
+  min-height:100vh;min-height:100svh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  background:var(--wh);
+}
+/* CSS hero background for mobile / fallback */
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 60%, rgba(0,113,227,.06) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 40% at 85% 35%, rgba(0,180,100,.04) 0%, transparent 100%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,113,227,.03) 0%, transparent 100%);
+}
+/* Floating dots for CSS fallback */
+.hero-dots{position:absolute;inset:0;z-index:0;overflow:hidden}
+.hero-dot{
+  position:absolute;border-radius:50%;
+  background:var(--bl);opacity:0;
+  animation:pulse 3s ease-in-out infinite;
+}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
+.hero-wrap{
+  position:relative;z-index:1;text-align:center;
+  max-width:880px;padding:2rem 1.25rem;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:.45rem;
+  font-size:.76rem;color:var(--bl);
+  background:rgba(0,113,227,.08);
+  padding:.28rem .85rem;border-radius:980px;
+  border:.5px solid rgba(0,113,227,.2);
+  margin-bottom:1.5rem;opacity:0;
+  animation:fadeUp .7s .2s cubic-bezier(.16,1,.3,1) forwards;
+}
+.hero-h1{
+  font-family:var(--fd);
+  font-size:clamp(2.2rem,5.5vw,5rem);
+  font-weight:700;letter-spacing:-.04em;
+  line-height:1.06;margin-bottom:1.35rem;
+  opacity:0;animation:fadeUp .8s .4s cubic-bezier(.16,1,.3,1) forwards;
+}
+.hero-h1 .hl{color:var(--bl)}
+.hero-sub{
+  font-family:var(--ft);
+  font-size:clamp(.9rem,1.8vw,1.15rem);
+  color:var(--mu);line-height:1.7;
+  max-width:560px;margin:0 auto 2.2rem;
+  opacity:0;animation:fadeUp .75s .6s cubic-bezier(.16,1,.3,1) forwards;
+}
+.hero-cta{
+  display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;
+  opacity:0;animation:fadeUp .7s .8s cubic-bezier(.16,1,.3,1) forwards;
+}
+.btn-primary{
+  font-size:.9rem;font-weight:500;color:var(--wh);
+  background:var(--bl);border:none;
+  padding:.7rem 2rem;border-radius:980px;
+  transition:background .2s,transform .15s;display:inline-block;
+  min-height:44px;
+}
+.btn-primary:hover{background:var(--bl2);transform:scale(1.02)}
+.btn-primary:active{transform:scale(.98)}
+.btn-line{
+  font-size:.9rem;font-weight:500;color:var(--bl);
+  background:transparent;border:1.5px solid var(--bl);
+  padding:.68rem 2rem;border-radius:980px;
+  transition:all .2s;display:inline-block;min-height:44px;
+}
+.btn-line:hover{background:var(--bl);color:var(--wh)}
+.btn-line:active{transform:scale(.98)}
+.scroll-h{
+  position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;
+  gap:.4rem;opacity:.4;z-index:1;pointer-events:none;
+}
+.scroll-h span{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mu)}
+.scroll-l{width:1px;height:32px;background:linear-gradient(to bottom,transparent,var(--mu));animation:sc 2s ease-in-out infinite}
+
+/* ============================================================
+   LOGOS
+============================================================ */
+#logos{
+  border-top:.5px solid var(--bd);border-bottom:.5px solid var(--bd);
+  padding:1.4rem 1.5rem;background:var(--wh);
+}
+.logos-in{
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;justify-content:center;
+  gap:2.5rem;flex-wrap:wrap;
+}
+.logo-txt{
+  font-family:var(--fd);font-size:.9rem;font-weight:600;
+  color:rgba(0,0,0,.2);letter-spacing:-.01em;transition:color .2s;
+}
+.logo-txt:hover{color:rgba(0,0,0,.5)}
+
+/* ============================================================
+   GENERIC SECTION
+============================================================ */
+section{padding:5.5rem 1.5rem}
+.inn{max-width:1200px;margin:0 auto}
+.s-eye{
+  font-family:var(--ft);font-size:.73rem;color:var(--bl);
+  text-transform:uppercase;letter-spacing:.09em;margin-bottom:.6rem;
+}
+.s-h2{
+  font-family:var(--fd);
+  font-size:clamp(1.8rem,3.5vw,2.8rem);
+  font-weight:700;letter-spacing:-.035em;line-height:1.1;
+  margin-bottom:.8rem;
+}
+.s-sub{
+  font-family:var(--ft);font-size:.92rem;
+  color:var(--mu);line-height:1.65;max-width:480px;
+}
+
+/* ============================================================
+   PRODUCT SHOWCASE
+============================================================ */
+#showcase{background:var(--gr);padding-bottom:0}
+.sc-tabs{
+  display:inline-flex;gap:.15rem;background:rgba(0,0,0,.06);
+  padding:.22rem;border-radius:980px;margin-bottom:2.5rem;
+}
+.sc-tab{
+  padding:.32rem .85rem;border-radius:980px;
+  color:var(--mu);background:none;border:none;
+  font-size:.78rem;transition:all .2s;min-height:36px;
+}
+.sc-tab.on{background:var(--wh);color:var(--bk);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+/* Browser window */
+.bw{
+  max-width:1060px;margin:0 auto;
+  background:#1c1c1e;border-radius:16px 16px 0 0;
+  overflow:hidden;
+  box-shadow:0 -4px 48px rgba(0,0,0,.18);
+  /* GPU layer for smooth rendering */
+  transform:translateZ(0);
+}
+.bw-bar{
+  height:40px;background:#2c2c2e;
+  display:flex;align-items:center;padding:0 1rem;gap:.7rem;
+  border-bottom:.5px solid rgba(255,255,255,.07);
+}
+.bw-dots{display:flex;gap:.45rem}
+.bw-dot{width:11px;height:11px;border-radius:50%}
+.bw-url{
+  flex:1;max-width:320px;margin:0 auto;
+  height:24px;background:rgba(255,255,255,.08);
+  border-radius:5px;display:flex;align-items:center;
+  justify-content:center;font-size:.7rem;
+  color:rgba(255,255,255,.4);font-family:'Menlo',monospace;
+}
+.bw-content{min-height:360px}
+/* Tab panels */
+.bw-panel{display:none;grid-template-columns:1fr 1fr}
+.bw-panel.on{display:grid}
+.bw-left{
+  padding:1.2rem;border-right:.5px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;gap:.6rem;
+}
+.bw-right{padding:1.2rem;display:flex;flex-direction:column;gap:.7rem}
+.panel-lbl{font-size:.66rem;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.1rem}
+.issue{
+  display:flex;align-items:flex-start;gap:.6rem;
+  padding:.55rem .7rem;border-radius:9px;
+  background:rgba(255,255,255,.04);transition:background .18s;
+}
+.issue:hover{background:rgba(255,255,255,.07)}
+.ibg{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;flex-shrink:0;margin-top:.05rem}
+.ic-r{background:rgba(255,69,58,.2);color:#ff453a}
+.ic-y{background:rgba(255,214,10,.2);color:#ffd60a}
+.ic-g{background:rgba(48,209,88,.2);color:#30d158}
+.issue-t{font-size:.76rem;color:rgba(255,255,255,.72)}
+.issue-l{font-size:.63rem;color:rgba(255,255,255,.28);margin-top:.08rem;font-family:'Menlo',monospace}
+.ai-box{
+  background:rgba(0,113,227,.1);border:.5px solid rgba(0,113,227,.25);
+  border-radius:9px;padding:.8rem;margin-top:auto;
+}
+.ai-box .label{font-size:.68rem;color:var(--bl);margin-bottom:.4rem}
+.ai-box p{font-size:.73rem;color:rgba(255,255,255,.55);line-height:1.55}
+/* Scan preview */
+.scan-head{display:flex;justify-content:space-between;align-items:center}
+.scan-url{font-size:.68rem;color:rgba(255,255,255,.35);font-family:'Menlo',monospace}
+.scan-ok{font-size:.65rem;background:rgba(48,209,88,.15);color:#30d158;padding:.18rem .55rem;border-radius:980px}
+.pg-prev{background:rgba(255,255,255,.04);border-radius:9px;padding:.85rem;flex:1}
+.pg-bar{height:8px;background:rgba(255,255,255,.1);border-radius:4px;margin-bottom:.45rem}
+.pg-bar.w100{width:100%}.pg-bar.w80{width:80%}.pg-bar.w65{width:65%}.pg-bar.w45{width:45%}
+.pg-img{height:70px;background:rgba(0,113,227,.15);border:1.5px solid rgba(255,69,58,.5);border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:.5rem;position:relative}
+.pg-err{position:absolute;top:4px;right:4px;background:rgba(255,69,58,.9);color:#fff;font-size:.58rem;padding:.12rem .35rem;border-radius:4px}
+/* Metrics cards */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:1rem}
+.met-card{background:rgba(255,255,255,.05);border:.5px solid rgba(255,255,255,.08);border-radius:10px;padding:.7rem;text-align:center}
+.met-n{font-family:var(--fd);font-size:1.6rem;font-weight:700;letter-spacing:-.04em;line-height:1}
+.met-l{font-size:.62rem;color:rgba(255,255,255,.4);margin-top:.2rem}
+
+/* ============================================================
+   FEATURE SECTIONS (sticky scroll desktop, stacked mobile)
+============================================================ */
+.feat-s{padding:5.5rem 1.5rem}
+.feat-s.alt{background:var(--gr)}
+.feat-hd{max-width:1200px;margin:0 auto;padding-bottom:3.5rem}
+.feat-eye{font-size:.73rem;color:var(--bl);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.6rem}
+.feat-h2{
+  font-family:var(--fd);font-size:clamp(1.8rem,3.2vw,2.6rem);
+  font-weight:700;letter-spacing:-.035em;line-height:1.1;
+}
+.feat-h2 span{color:var(--bl)}
+.feat-lay{
+  max-width:1200px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 64px 1fr;
+  gap:0;align-items:start;
+}
+/* LEFT: sticky visual */
+.feat-vis{
+  position:sticky;top:calc(var(--nh) + 2rem);
+  will-change:transform;/* GPU promote for smooth sticky */
+}
+.fv{
+  background:var(--bk);border-radius:20px;overflow:hidden;
+  box-shadow:0 8px 36px rgba(0,0,0,.18);
+  aspect-ratio:4/3;position:relative;
+  transform:translateZ(0);/* force GPU layer */
+}
+.fvp{
+  position:absolute;inset:0;opacity:0;
+  transition:opacity .4s cubic-bezier(.4,0,.2,1);
+  display:flex;align-items:stretch;
+}
+.fvp.on{opacity:1}
+/* CENTER: timeline */
+.feat-tl{display:flex;flex-direction:column;align-items:center;padding-top:1.5rem}
+.tl-in{position:relative;height:100%;display:flex;flex-direction:column;align-items:center;min-height:500px;justify-content:space-around}
+.tl-ln{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:1.5px;height:100%;
+  background:linear-gradient(to bottom,transparent,var(--bd) 20%,var(--bd) 80%,transparent);
+}
+.tl-dot{
+  width:13px;height:13px;border-radius:50%;
+  background:var(--wh);border:2px solid rgba(0,0,0,.18);
+  transition:all .3s;flex-shrink:0;z-index:1;
+  box-shadow:0 0 0 0 rgba(0,113,227,0);
+}
+.tl-dot.on{border-color:var(--bl);background:var(--bl);box-shadow:0 0 0 4px rgba(0,113,227,.16)}
+/* RIGHT: items */
+.feat-items{display:flex;flex-direction:column;gap:4.5rem;padding:1rem 0 1rem 2rem}
+.feat-item{opacity:.4;transition:opacity .4s cubic-bezier(.4,0,.2,1)}
+.feat-item.on{opacity:1}
+.feat-item h3{
+  font-family:var(--fd);font-size:1.35rem;font-weight:600;
+  letter-spacing:-.025em;margin-bottom:.55rem;
+}
+.feat-item p{font-family:var(--ft);font-size:.9rem;color:var(--mu);line-height:1.7;margin-bottom:.85rem}
+.feat-lnk{
+  font-size:.83rem;color:var(--bl);font-weight:500;
+  display:inline-flex;align-items:center;gap:.28rem;transition:gap .18s;
+}
+.feat-lnk:hover{gap:.5rem}
+
+/* ============================================================
+   COVERAGE METRICS (NEW)
+============================================================ */
+#coverage{background:var(--bk)}
+.cov-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1.5rem;margin-top:3.5rem;
+}
+.cov-card{
+  background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:2rem 1.5rem;
+  text-align:center;
+  transition:background .25s,transform .25s;
+}
+.cov-card:hover{background:rgba(255,255,255,.07);transform:translateY(-3px)}
+.ring-wrap{position:relative;width:90px;height:90px;margin:0 auto 1.2rem}
+.ring-svg{transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:6}
+.ring-fill{
+  fill:none;stroke-width:6;stroke-linecap:round;
+  stroke-dasharray:245;stroke-dashoffset:245;
+  transition:stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1);
+}
+.ring-fill.anim{stroke-dashoffset:var(--off,245)}
+.ring-val{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fd);font-size:1.3rem;font-weight:700;color:var(--wh);
+  letter-spacing:-.03em;
+}
+.cov-title{font-family:var(--fd);font-size:1rem;font-weight:600;color:var(--wh);margin-bottom:.3rem}
+.cov-desc{font-family:var(--ft);font-size:.8rem;color:rgba(255,255,255,.4);line-height:1.5}
+
+/* ============================================================
+   TESTIMONIALS
+============================================================ */
+#social{background:var(--wh);padding:5.5rem 1.5rem}
+.soc-in{max-width:1200px;margin:0 auto}
+.soc-hd{text-align:center;margin-bottom:3rem}
+.soc-h2{
+  font-family:var(--fd);font-size:clamp(1.8rem,3.5vw,2.6rem);
+  font-weight:700;letter-spacing:-.035em;line-height:1.1;margin-bottom:.7rem;
+}
+.soc-h2 .g{color:#1a9e57}.soc-h2 .b{color:var(--bl)}
+.soc-sub{font-family:var(--ft);font-size:.9rem;color:var(--mu);line-height:1.6;max-width:480px;margin:0 auto 2rem}
+/* stats */
+.stats{display:flex;gap:3rem;justify-content:center;flex-wrap:wrap;margin-bottom:3rem}
+.stat-n{font-family:var(--fd);font-size:2rem;font-weight:700;letter-spacing:-.04em;display:block}
+.stat-l{font-family:var(--ft);font-size:.8rem;color:var(--mu)}
+/* tweet track */
+.tw-wrap{position:relative}
+.tw-track{
+  display:flex;gap:.9rem;
+  overflow-x:auto;scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;
+  padding:.5rem .25rem 1.4rem;
+  -ms-overflow-style:none;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.tw-track::-webkit-scrollbar{display:none}
+.tw-card{
+  scroll-snap-align:start;flex-shrink:0;width:300px;
+  background:var(--wh);border:.5px solid rgba(0,0,0,.09);
+  border-radius:20px;padding:1.3rem;
+  box-shadow:0 2px 12px rgba(0,0,0,.05);
+  transition:transform .2s,box-shadow .2s;
+}
+.tw-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
+.tc-h{display:flex;align-items:center;gap:.65rem;margin-bottom:.8rem}
+.tc-av{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fd);font-size:.82rem;font-weight:600;color:var(--wh);
+}
+.tc-nm{font-family:var(--fd);font-size:.82rem;font-weight:600}
+.tc-hd{font-size:.73rem;color:var(--mu)}
+.tc-x{margin-left:auto;color:var(--bk);opacity:.5;transition:opacity .18s;flex-shrink:0}
+.tw-card:hover .tc-x{opacity:.9}
+.tc-txt{font-family:var(--ft);font-size:.84rem;line-height:1.6;margin-bottom:.8rem}
+.tc-ft{display:flex;justify-content:space-between;align-items:center;padding-top:.7rem;border-top:.5px solid rgba(0,0,0,.07)}
+.tc-dt{font-size:.7rem;color:var(--mu)}
+.tc-lk{display:flex;align-items:center;gap:.28rem;font-size:.73rem;color:var(--mu)}
+.tc-lk svg{width:13px;height:13px}
+/* dots */
+.tw-dots{display:flex;gap:.45rem;justify-content:center;margin-top:.8rem}
+.tdot{width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,.14);border:none;padding:0;transition:all .25s;cursor:pointer;min-width:8px}
+.tdot.on{width:20px;border-radius:4px;background:var(--bk)}
+
+/* ============================================================
+   PRICING (NEW)
+============================================================ */
+#pricing{background:var(--gr);padding:5.5rem 1.5rem}
+.pr-toggle{
+  display:flex;gap:.2rem;background:rgba(0,0,0,.06);
+  padding:.22rem;border-radius:980px;
+  margin:1.5rem auto 3rem;width:fit-content;
+}
+.pr-tab{
+  padding:.32rem .9rem;border-radius:980px;
+  font-size:.78rem;color:var(--mu);background:none;border:none;transition:all .2s;min-height:36px;
+}
+.pr-tab.on{background:var(--wh);color:var(--bk);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.pr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;max-width:900px;margin:0 auto}
+.pr-card{
+  background:var(--wh);border:.5px solid rgba(0,0,0,.1);
+  border-radius:24px;padding:2rem;
+  transition:transform .25s,box-shadow .25s;
+  position:relative;overflow:hidden;
+}
+.pr-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.1)}
+.pr-card.pop{
+  background:var(--bk);color:var(--wh);
+  border-color:var(--bk);
+  box-shadow:0 8px 32px rgba(0,0,0,.2);
+}
+.pr-badge{
+  position:absolute;top:1.2rem;right:1.2rem;
+  font-size:.68rem;font-weight:600;
+  background:var(--bl);color:var(--wh);
+  padding:.2rem .55rem;border-radius:980px;
+}
+.pr-tier{
+  font-family:var(--fd);font-size:.78rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--mu);margin-bottom:.85rem;
+}
+.pr-card.pop .pr-tier{color:rgba(255,255,255,.5)}
+.pr-price{
+  font-family:var(--fd);font-size:2.6rem;font-weight:700;
+  letter-spacing:-.05em;line-height:1;margin-bottom:1.5rem;
+  display:flex;align-items:flex-start;gap:.2rem;
+}
+.pr-cur{font-size:1.2rem;margin-top:.4rem;font-weight:500}
+.pr-per{font-family:var(--ft);font-size:.8rem;font-weight:400;color:var(--mu);margin-top:auto;margin-bottom:.2rem}
+.pr-card.pop .pr-per{color:rgba(255,255,255,.4)}
+.pr-features{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.75rem}
+.pr-feat{display:flex;align-items:flex-start;gap:.55rem;font-size:.84rem}
+.pr-feat .chk{
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:.06rem;
+}
+.chk-bl{background:rgba(0,113,227,.12);color:var(--bl)}
+.chk-wh{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8)}
+.pr-card.pop .pr-feat{color:rgba(255,255,255,.8)}
+.pr-btn{
+  width:100%;padding:.75rem;border-radius:12px;
+  font-size:.87rem;font-weight:600;border:none;
+  transition:all .2s;min-height:44px;
+}
+.pr-btn-bl{background:var(--bl);color:var(--wh)}
+.pr-btn-bl:hover{background:var(--bl2)}
+.pr-btn-bk{background:var(--wh);color:var(--bk)}
+.pr-btn-bk:hover{background:rgba(255,255,255,.9)}
+.pr-btn-out{background:transparent;color:var(--bk);border:1.5px solid rgba(0,0,0,.15)}
+.pr-btn-out:hover{background:var(--bk);color:var(--wh)}
+
+/* ============================================================
+   INTEGRATIONS (NEW)
+============================================================ */
+#integrations{background:var(--wh)}
+.int-grid{
+  display:grid;grid-template-columns:repeat(6,1fr);
+  gap:1rem;margin-top:3rem;
+}
+.int-card{
+  background:var(--gr);border-radius:16px;
+  padding:1.25rem 1rem;
+  display:flex;flex-direction:column;align-items:center;
+  gap:.6rem;
+  border:.5px solid transparent;
+  transition:all .22s;cursor:pointer;
+}
+.int-card:hover{background:var(--wh);border-color:var(--bd);box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-2px)}
+.int-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.int-nm{font-family:var(--fd);font-size:.75rem;font-weight:600;text-align:center}
+
+/* ============================================================
+   TEST SECTION
+============================================================ */
+#test{background:var(--bk);padding:5.5rem 1.5rem}
+.test-wrap-in{max-width:580px;margin:0 auto;text-align:left;padding-top:2.5rem}
+.t-inp-row{
+  display:flex;gap:.4rem;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;padding:.4rem;margin-bottom:.8rem;
+}
+.t-inp{
+  flex:1;background:none;border:none;outline:none;
+  font-family:var(--ft);font-size:.9rem;color:var(--wh);
+  padding:.4rem .6rem;min-width:0;
+}
+.t-inp::placeholder{color:rgba(255,255,255,.28)}
+.t-btn{
+  font-size:.82rem;font-weight:500;color:var(--wh);
+  background:var(--bl);border:none;padding:.5rem 1.3rem;
+  border-radius:10px;white-space:nowrap;transition:background .18s;
+  min-height:40px;
+}
+.t-btn:hover:not(:disabled){background:var(--bl2)}
+.t-btn:disabled{background:#3a3a3a;cursor:not-allowed}
+.t-chk{display:flex;align-items:center;gap:.5rem;margin-bottom:1.1rem}
+.t-chk label{font-size:.78rem;color:rgba(255,255,255,.42);cursor:pointer;user-select:none}
+.t-chk input{accent-color:var(--bl);width:16px;height:16px;cursor:pointer}
+#t-loader{display:none;color:var(--bl);font-size:.82rem;margin-bottom:.7rem}
+.t-result{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:1.3rem;display:none;
+}
+.t-result.on{display:block}
+.t-tag{font-size:.68rem;color:#34C759;text-transform:uppercase;letter-spacing:.09em;margin-bottom:.6rem}
+.t-txt{
+  font-family:'Menlo','SF Mono',monospace;font-size:.74rem;
+  color:rgba(255,255,255,.62);line-height:1.7;white-space:pre-wrap;
+  max-height:260px;overflow-y:auto;
+}
+
+/* ============================================================
+   AI ASSISTANT
+============================================================ */
+#ai{background:var(--gr)}
+.ai-card{
+  max-width:660px;margin:2.5rem auto 0;background:var(--wh);
+  border-radius:24px;border:.5px solid rgba(0,0,0,.08);
+  overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.07);
+}
+.ai-hd{
+  padding:.85rem 1.3rem;border-bottom:.5px solid rgba(0,0,0,.07);
+  display:flex;align-items:center;gap:.6rem;
+}
+.ai-av{width:30px;height:30px;border-radius:50%;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+.ai-nm{font-family:var(--fd);font-size:.8rem;font-weight:600}
+.ai-st{font-size:.66rem;color:#34C759}
+.chat-msgs{
+  padding:1.3rem;display:flex;flex-direction:column;
+  gap:.8rem;min-height:200px;max-height:300px;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.msg{display:flex;max-width:86%}
+.msg.u{align-self:flex-end;flex-direction:row-reverse}
+.bubble{
+  font-family:var(--ft);font-size:.81rem;
+  line-height:1.55;padding:.6rem .85rem;border-radius:13px;
+}
+.msg.bot .bubble{background:var(--gr)}
+.msg.u .bubble{background:var(--bl);color:var(--wh)}
+.ai-inp-r{
+  padding:.8rem 1.15rem;border-top:.5px solid rgba(0,0,0,.07);
+  display:flex;gap:.55rem;
+}
+.ai-inp{
+  flex:1;font-family:var(--ft);font-size:.81rem;
+  border:1px solid rgba(0,0,0,.1);border-radius:980px;
+  padding:.48rem .85rem;outline:none;transition:border-color .18s;
+  min-height:38px;
+  appearance: none;
+-webkit-appearance: none;
+}
+.ai-inp:focus{border-color:var(--bl)}
+.ai-snd{
+  background:var(--bl);color:var(--wh);border:none;
+  border-radius:50%;width:33px;height:33px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .18s;min-width:33px;
+}
+.ai-snd:hover{background:var(--bl2)}
+
+/* ============================================================
+   FAQ
+============================================================ */
+#faq{background:var(--wh)}
+.faq-l{max-width:660px;margin:2.5rem auto 0}
+.faq-row{border-bottom:.5px solid rgba(0,0,0,.09)}
+.faq-q{
+  font-family:var(--fd);font-size:.95rem;font-weight:500;
+  letter-spacing:-.01em;padding:1.1rem 0;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  transition:color .18s;gap:1rem;min-height:48px;
+}
+.faq-q:hover{color:var(--bl)}
+.faq-ic{font-size:1rem;color:var(--mu);transition:transform .3s cubic-bezier(.4,0,.2,1);flex-shrink:0}
+.faq-a{
+  font-family:var(--ft);font-size:.86rem;color:var(--mu);line-height:1.7;
+  max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.16,1,.3,1),padding .3s;
+}
+.faq-a.open{max-height:160px;padding-bottom:1.1rem}
+
+/* ============================================================
+   CTA BANNER (NEW)
+============================================================ */
+#cta-banner{
+  background:var(--bk);padding:5rem 1.5rem;text-align:center;
+}
+.cta-h{
+  font-family:var(--fd);
+  font-size:clamp(2rem,4vw,3.5rem);
+  font-weight:700;letter-spacing:-.04em;line-height:1.1;
+  color:var(--wh);margin-bottom:1rem;
+}
+.cta-h span{color:var(--bl)}
+.cta-sub{font-family:var(--ft);font-size:.95rem;color:rgba(255,255,255,.45);margin-bottom:2rem;line-height:1.6}
+.cta-btns{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer{
+  background:var(--bk);padding:3rem 1.5rem 2rem;
+  border-top:.5px solid rgba(255,255,255,.07);
+}
+.ft-in{max-width:1200px;margin:0 auto}
+.ft-grid{
+  display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;
+  gap:2.5rem;padding-bottom:2.2rem;
+  border-bottom:.5px solid rgba(255,255,255,.07);margin-bottom:1.8rem;
+}
+.ft-logo{display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem}
+.ft-logo-t{font-family:var(--fd);font-size:1rem;font-weight:600;color:var(--wh)}
+.ft-tag{font-family:var(--ft);font-size:.76rem;line-height:1.65;color:rgba(255,255,255,.35);margin-bottom:1.3rem}
+.ft-soc{display:flex;gap:.55rem;margin-bottom:1.3rem}
+.ft-soc a{
+  width:32px;height:32px;border-radius:8px;
+  background:rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.4);transition:all .18s;min-width:32px;
+}
+.ft-soc a:hover{background:rgba(255,255,255,.12);color:var(--wh)}
+.ft-soc a svg{width:15px;height:15px}
+.app-btns{display:flex;gap:.6rem;flex-wrap:wrap}
+.app-btn{
+  display:flex;align-items:center;gap:.45rem;
+  background:rgba(255,255,255,.06);
+  border:.5px solid rgba(255,255,255,.1);
+  padding:.42rem .8rem;border-radius:8px;transition:background .18s;
+  min-height:40px;
+}
+.app-btn:hover{background:rgba(255,255,255,.1)}
+.app-btn svg{width:17px;height:17px;color:rgba(255,255,255,.6);flex-shrink:0}
+.app-txt{display:flex;flex-direction:column}
+.app-sub{font-size:.54rem;color:rgba(255,255,255,.42)}
+.app-nm{font-family:var(--fd);font-size:.7rem;font-weight:600;color:var(--wh)}
+.ft-col-h{font-family:var(--fd);font-size:.76rem;font-weight:600;color:var(--wh);margin-bottom:.8rem}
+.ft-col-l{display:flex;flex-direction:column;gap:.38rem}
+.ft-col-l a{font-family:var(--ft);font-size:.74rem;color:rgba(255,255,255,.35);transition:color .18s}
+.ft-col-l a:hover{color:var(--wh)}
+.ft-bot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.7rem}
+.ft-copy{font-family:var(--ft);font-size:.7rem;color:rgba(255,255,255,.28)}
+.ft-lnks{display:flex;gap:1.3rem}
+.ft-lnks a{font-family:var(--ft);font-size:.7rem;color:rgba(255,255,255,.28);transition:color .18s}
+.ft-lnks a:hover{color:var(--wh)}
+
+/* ============================================================
+   RESPONSIVE — Mobile First Overrides
+============================================================ */
+@media(max-width:1024px){
+  .int-grid{grid-template-columns:repeat(4,1fr)}
+  .cov-grid{grid-template-columns:repeat(2,1fr)}
+  .pr-grid{grid-template-columns:1fr;max-width:420px}
+}
+
+@media(max-width:960px){
+  /* Hide desktop nav list and buttons */
+  .nav-ul,.btn-ghost,.btn-pill{display:none}
+  .ham{display:flex}
+  /* Feature sections: no sticky */
+  .feat-lay{display:block}
+  .feat-vis{display:none}
+  .feat-tl{display:none}
+  .feat-items{padding:0;gap:2.5rem}
+  .feat-item{opacity:1}
+  /* Bento: single column */
+  .bw-panel{grid-template-columns:1fr}
+  .bw-right{display:none}
+  .metrics-row{grid-template-columns:repeat(2,1fr)}
+  /* Footer */
+  .ft-grid{grid-template-columns:1fr 1fr}
+  /* Coverage */
+  .cov-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:640px){
+  section{padding:4rem 1.25rem}
+  #coverage{padding:4rem 1.25rem}
+  #pricing{padding:4rem 1.25rem}
+  #integrations{padding:4rem 1.25rem}
+  #test{padding:4rem 1.25rem}
+  #social{padding:4rem 1.25rem}
+  #faq{padding:4rem 1.25rem}
+  #cta-banner{padding:3.5rem 1.25rem}
+  footer{padding:2.5rem 1.25rem 2rem}
+  #logos{padding:1.2rem 1.25rem}
+  .logos-in{gap:1.5rem}
+  .hero-cta{flex-direction:column;align-items:center}
+  .btn-primary,.btn-line{width:100%;max-width:320px;text-align:center}
+  .stats{gap:1.5rem}
+  .int-grid{grid-template-columns:repeat(3,1fr);gap:.7rem}
+  .cov-grid{grid-template-columns:repeat(2,1fr);gap:1rem}
+  .ft-grid{grid-template-columns:1fr}
+  .tw-card{width:270px}
+  .pr-grid{max-width:100%}
+  #showcase{padding:4rem 1.25rem 0}
+  /* Showcase browser mockup simplified */
+  .bw{border-radius:12px 12px 0 0}
+  .bw-left{padding:.85rem}
+  .metrics-row{grid-template-columns:repeat(2,1fr)}
+  .cta-btns{flex-direction:column;align-items:center}
+  .cta-btns .btn-primary,.cta-btns .btn-line{width:100%;max-width:300px;text-align:center}
+}
+
+@media(max-width:380px){
+  .hero-h1{font-size:1.9rem}
+  .int-grid{grid-template-columns:repeat(2,1fr)}
+  .tw-card{width:240px}
+  .metrics-row{grid-template-columns:1fr 1fr}
+}
+
+/* Safe area insets for iPhone notch */
+@supports(padding:env(safe-area-inset-top)){
+  #nav{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  footer{padding-bottom:calc(2rem + env(safe-area-inset-bottom))}
+}
+</style>
 </head>
 <body>
 
-    <h1>🦅 visionBird</h1>
-    <p>Otonom UI/UX Kalite Güvence Asistanı</p>
+<!-- ============================================================
+     ANNOUNCEMENT BAR
+============================================================ -->
+<div id="ann">
+  <span>🚀 <strong>visionBird 2.0</strong> — Gemini Vision AI ile tamamen yenilendi.</span>
+  <a href="#"> Yenilikleri keşfet →</a>
+  <button class="ann-x" onclick="this.parentElement.remove()" aria-label="Kapat">×</button>
+</div>
 
-    <div class="search-box">
-        <!-- URL Girişi: Enter tuşunu dinleyen event eklendi -->
-        <input type="text" id="urlInput" placeholder="Test edilecek web sitesi URL'sini yapıştırın..." onkeydown="checkEnter(event)" />
-        <button id="scanBtn" onclick="havalandir()">Havalandır 🚀</button>
+<!-- ============================================================
+     NAVBAR
+============================================================ -->
+<nav id="nav">
+<div class="nav-in">
+  <a href="#" class="nav-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="28" height="28" aria-hidden="true">
+      <polygon points="50,180 50,100 100,50 160,60 190,90 150,120 120,180" fill="#000"/>
+      <polyline points="50,100 100,50 160,60" fill="none" stroke="#E0F2FE" stroke-width="5" stroke-linejoin="round"/>
+      <polyline points="150,120 120,180" fill="none" stroke="#E0F2FE" stroke-width="5" stroke-linejoin="round"/>
+      <polygon points="160,60 190,90 150,120" fill="#0071e3"/>
+      <circle cx="115" cy="85" r="12" fill="none" stroke="#E0F2FE" stroke-width="2.5"/>
+      <circle cx="115" cy="85" r="4.5" fill="#0071e3"/>
+      <line x1="115" y1="63" x2="115" y2="74" stroke="#E0F2FE" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="115" y1="96" x2="115" y2="107" stroke="#E0F2FE" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="93" y1="85" x2="104" y2="85" stroke="#E0F2FE" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="126" y1="85" x2="137" y2="85" stroke="#E0F2FE" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <span class="nav-logo-t">visionBird</span>
+  </a>
+
+  <ul class="nav-ul" role="menubar">
+    <!-- ÜRÜNLER -->
+    <li class="nav-li" role="none">
+      <button class="nav-btn" role="menuitem" aria-haspopup="true">Ürünler <span class="chv">▾</span></button>
+      <div class="mega mega-p" role="menu">
+        <div class="m-row">
+          <div class="m-ico ico-g"><svg viewBox="0 0 24 24" fill="none" stroke="#00b464" stroke-width="1.8"><path d="M12 2C8 2 4 5.5 4 9c0 4.5 4 8 4 11h8c0-3 4-6.5 4-11 0-3.5-4-7-8-7z"/><circle cx="12" cy="9" r="2.5" fill="#00b464" stroke="none"/></svg></div>
+          <div><div class="mt">visionBird Uygulaması</div><div class="md">Modern uygulamalarınızı açık kaynaklı uygulamamızla test edin</div></div>
+        </div>
+        <div class="msub">
+          <a href="#" class="msl"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="12" height="9" rx="2"/><line x1="4" y1="13" x2="10" y2="13"/><line x1="7" y1="11" x2="7" y2="13"/></svg>Tarayıcı Testi</a>
+          <a href="#" class="msl"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M2 7h7M2 10h5"/></svg>Test Oluştur</a>
+          <a href="#" class="msl"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><line x1="7" y1="4" x2="7" y2="7"/><line x1="7" y1="9" x2="7" y2="10"/></svg>Görsel Hata Ayıklama</a>
+          <a href="#" class="msl"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L7 7.5l-2.6 1.4.5-2.9-2.1-2 2.9-.4z"/></svg>Esneme Direnci</a>
+        </div>
+        <hr class="msep">
+        <div class="m-row">
+          <div class="m-ico ico-b"><svg viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.8"><path d="M18 10a6 6 0 10-11.9.5A5 5 0 006 20h12a4 4 0 000-8v-.5z"/></svg></div>
+          <div><div class="mt">visionBird Bulutu</div><div class="md">Her sürümde testlerinizi tam bir güvenle ölçeklendirin</div></div>
+        </div>
+        <div class="msub">
+          <a href="#" class="msl"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg>Görsel İncelemeler</a>
+          <a href="#" class="msl"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M7 3v4l2.5 1.5"/></svg>Akıllı Orkestrasyon</a>
+          <a href="#" class="msl"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,10 4,7 7,9 10,4 12,6"/></svg>Analizler &amp; İçgörüler</a>
+          <a href="#" class="msl"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3" cy="7" r="2"/><circle cx="11" cy="3" r="2"/><circle cx="11" cy="11" r="2"/><line x1="5" y1="6.2" x2="9" y2="4.2"/><line x1="5" y1="7.8" x2="9" y2="9.8"/></svg>İş Akışı Entegrasyonları</a>
+        </div>
+        <hr class="msep">
+        <div class="mg2" style="gap:.7rem">
+          <div class="m-row" style="margin:0"><div class="m-ico ico-o"><svg viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="1.8"><rect x="2" y="2" width="9" height="9" rx="2"/><rect x="13" y="2" width="9" height="9" rx="2"/><rect x="2" y="13" width="9" height="9" rx="2"/><rect x="13" y="13" width="9" height="9" rx="2"/></svg></div><div><div class="mt">Kullanıcı Arayüzü Kapsamı</div><div class="md">Test eksikliklerini anında tespit edin</div></div></div>
+          <div class="m-row" style="margin:0"><div class="m-ico ico-v"><svg viewBox="0 0 24 24" fill="none" stroke="#5856d6" stroke-width="1.8"><circle cx="12" cy="7" r="4"/><path d="M2 21c0-5 4.5-8 10-8s10 3 10 8"/></svg></div><div><div class="mt">Erişebilirlik</div><div class="md">Her testte otomatik kontrol</div></div></div>
+        </div>
+      </div>
+    </li>
+
+    <!-- DOKÜMANLAR -->
+    <li class="nav-li" role="none">
+      <button class="nav-btn" role="menuitem" aria-haspopup="true">Dokümanlar <span class="chv">▾</span></button>
+      <div class="mega mega-d" role="menu">
+        <div class="mg3">
+          <div><div class="mt">📖 Dokümantasyon</div><div class="md">VisionBird ile kodunuzu nasıl test edeceğinizi öğrenin</div><a href="#" class="mlk">Tümünü Gör →</a></div>
+          <div><div class="mt">🚀 Başlarken</div><div class="mpl" style="padding:0;margin-top:.5rem"><a href="#">visionBird indir</a><a href="#">İlk testini yaz</a><a href="#">Uygulamanı test et</a></div></div>
+          <div><div class="mt">📚 Referanslar</div><div class="mpl" style="padding:0;margin-top:.5rem"><a href="#">API</a><a href="#">Yapılandırma</a><a href="#">En İyi Uygulamalar</a></div></div>
+        </div>
+      </div>
+    </li>
+
+    <!-- TOPLULUK -->
+    <li class="nav-li" role="none">
+      <button class="nav-btn" role="menuitem" aria-haspopup="true">Topluluk <span class="chv">▾</span></button>
+      <div class="mega mega-c" role="menu">
+        <div class="mg2">
+          <div><div class="mt">✍️ Blog</div><div class="md">En iyi uygulamalar, içgörüler &amp; ve fazlası</div><a href="#" class="mlk">Tümünü Oku →</a></div>
+          <div><div class="mt">🏷️ Konular</div><div class="mpl" style="padding:0;margin-top:.5rem"><a href="#">Yayınlar</a><a href="#">Topluluk</a><a href="#">Eğitim</a><a href="#">Şirket</a><a href="#">Müşteri Mağazaları</a></div></div>
+        </div>
+        <div class="csoc">
+          <a href="#" class="sl"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>Github</a>
+          <a href="#" class="sl"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37.07.07 0 00 3.645 4.397C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>Discord</a>
+          <a href="#" class="sl"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>YouTube</a>
+          <a href="#" class="sl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Takvim</a>
+        </div>
+      </div>
+    </li>
+
+    <!-- ŞİRKET -->
+    <li class="nav-li" role="none">
+      <button class="nav-btn" role="menuitem" aria-haspopup="true">Şirket <span class="chv">▾</span></button>
+      <div class="mega mega-s" role="menu">
+        <div class="mt">🌐 visionBird Hakkında</div>
+        <div class="md" style="margin-top:.2rem">Yeni nesil testleri destekle</div>
+        <a href="#" class="mlk">Daha Fazla →</a>
+      </div>
+    </li>
+  </ul>
+
+  <div class="nav-r">
+    <button class="btn-ghost">Giriş Yap</button>
+    <button class="btn-pill">Üye Ol</button>
+    <button class="ham" onclick="toggleMob()" aria-label="Menüyü aç" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <line x1="2" y1="5" x2="18" y2="5" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="2" y1="10" x2="18" y2="10" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="2" y1="15" x2="18" y2="15" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
+</nav>
+
+<!-- MOBILE OVERLAY -->
+<div id="mob" role="dialog" aria-modal="true" aria-label="Mobil Menü">
+  <div class="mob-it">Ürünler <span>›</span></div>
+  <div class="mob-it">Dokümanlar <span>›</span></div>
+  <div class="mob-it">Topluluk <span>›</span></div>
+  <div class="mob-it">Şirket <span>›</span></div>
+  <div class="mob-auth">
+    <button class="btn-pill" onclick="toggleMob()">Üye Ol</button>
+    <button class="btn-od" onclick="toggleMob()">Giriş Yap</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     HERO
+============================================================ -->
+<section id="hero" aria-label="Ana sayfa başlığı">
+  <div class="hero-bg" aria-hidden="true"></div>
+  <div class="hero-dots" id="hero-dots" aria-hidden="true"></div>
+  <canvas id="hero-canvas" aria-hidden="true"></canvas>
+  <div class="hero-wrap">
+    <div class="hero-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="#0071e3" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+      Yapay Zeka Destekli Görsel QA
     </div>
-
-    <div class="toggle-container">
-        <input type="checkbox" id="simSwitch">
-        <label for="simSwitch">⚠️ Hata Simülasyonu Modu (Siteyi kasıtlı olarak boz)</label>
+    <h1 class="hero-h1">Web Siteniz Gerçekten<br><span class="hl">Kusursuz</span> mu?</h1>
+    <p class="hero-sub">visionBird, tasarım hatalarını saniyeler içinde tespit eder. Yapay zeka gözüyle, insan hassasiyetiyle. Teknik bilgi gerekmez.</p>
+    <div class="hero-cta">
+      <a href="#test" class="btn-primary">Ücretsiz Test Et</a>
+      <a href="#showcase" class="btn-line">Ürünü İncele →</a>
     </div>
+  </div>
+  <div class="scroll-h" aria-hidden="true">
+    <span>Kaydır</span>
+    <div class="scroll-l"></div>
+  </div>
+</section>
 
-    <div id="loader" class="loader">
-        ⏳ visionBird hedefi tarıyor ve analiz ediyor, lütfen bekleyin...
+<!-- ============================================================
+     LOGO STRIP
+============================================================ -->
+<div id="logos" aria-label="Güvenen markalar">
+  <div class="logos-in">
+    <span class="logo-txt">LaunchDarkly</span>
+    <span class="logo-txt">Trendyol</span>
+    <span class="logo-txt">Khan Academy</span>
+    <span class="logo-txt">Splunk</span>
+    <span class="logo-txt">Indeed</span>
+    <span class="logo-txt">HelloFresh</span>
+  </div>
+</div>
+
+<!-- ============================================================
+     PRODUCT SHOWCASE
+============================================================ -->
+<section id="showcase" style="padding-bottom:0">
+<div class="inn" style="text-align:center">
+  <p class="s-eye fu">Ürün Turu</p>
+  <h2 class="s-h2 fu fd1">Modern ekipler için güçlü bir QA platformu</h2>
+  <p class="s-sub fu fd2" style="margin:.6rem auto 2rem">Tarayıcı tabanlı, AI destekli ve CI/CD entegreli — hepsi bir arada.</p>
+  <div class="sc-tabs fu fd3">
+    <button class="sc-tab on" onclick="scTab('scan',this)">Tarama</button>
+    <button class="sc-tab" onclick="scTab('report',this)">Rapor</button>
+    <button class="sc-tab" onclick="scTab('ci',this)">CI/CD</button>
+  </div>
+</div>
+<div class="inn fu fd4">
+  <div class="bw">
+    <div class="bw-bar">
+      <div class="bw-dots">
+        <div class="bw-dot" style="background:#ff5f56"></div>
+        <div class="bw-dot" style="background:#ffbd2e"></div>
+        <div class="bw-dot" style="background:#27c93f"></div>
+      </div>
+      <div class="bw-url" id="bw-url">visionbird.app/scan</div>
+      <div style="width:48px"></div>
     </div>
-
-    <div id="resultBox" class="result-container">
-        <h2 style="color: #4ade80;">✅ Analiz Tamamlandı!</h2>
-        <h3 style="color: #38bdf8; margin-top: 2rem;">📋 Yapay Zeka Hata Raporu:</h3>
-        <div id="reportBox" class="report-text"></div>
+    <div class="bw-content">
+      <!-- SCAN -->
+      <div class="bw-panel on" id="sc-scan">
+        <div class="bw-left">
+          <div class="panel-lbl">🦅 Sorun Tespiti</div>
+          <div class="issue"><div class="ibg ic-r">KR</div><div><div class="issue-t">H1 Taşması Tespit Edildi</div><div class="issue-l">hero &gt; h1 · CSS overflow</div></div></div>
+          <div class="issue"><div class="ibg ic-r">KR</div><div><div class="issue-t">Buton Kontrast Düşük</div><div class="issue-l">.cta-btn · WCAG 2.1 ihlali</div></div></div>
+          <div class="issue"><div class="ibg ic-y">UY</div><div><div class="issue-t">Mobil Dokunma Alanı Küçük</div><div class="issue-l">nav .close · 28×28px &lt; 44px</div></div></div>
+          <div class="issue"><div class="ibg ic-y">UY</div><div><div class="issue-t">Resim Alt Metni Eksik</div><div class="issue-l">img[4], img[7] · WCAG A</div></div></div>
+          <div class="issue"><div class="ibg ic-g">OK</div><div><div class="issue-t">Mobil Görünüm Temiz</div><div class="issue-l">375px · Responsive ✓</div></div></div>
+          <div class="ai-box">
+            <div class="label">🤖 AI Analizi</div>
+            <p>2 kritik, 2 uyarı tespit edildi. H1 taşması ve kontrast oranı öncelikli müdahale gerektirir.</p>
+          </div>
+        </div>
+        <div class="bw-right">
+          <div class="scan-head">
+            <div class="scan-url">https://example-site.com</div>
+            <div class="scan-ok">✓ Tamamlandı</div>
+          </div>
+          <div class="metrics-row">
+            <div class="met-card"><div class="met-n" style="color:#ff453a">2</div><div class="met-l">Kritik</div></div>
+            <div class="met-card"><div class="met-n" style="color:#ffd60a">2</div><div class="met-l">Uyarı</div></div>
+            <div class="met-card"><div class="met-n" style="color:#30d158">14</div><div class="met-l">Başarılı</div></div>
+            <div class="met-card"><div class="met-n" style="color:#0071e3">87</div><div class="met-l">Puan/100</div></div>
+          </div>
+          <div class="pg-prev">
+            <div style="display:flex;gap:.5rem;margin-bottom:.6rem;align-items:center">
+              <div class="pg-bar" style="width:40px;height:10px;background:rgba(0,113,227,.35);border-radius:3px"></div>
+              <div class="pg-bar" style="width:170px;height:7px"></div>
+              <div style="flex:1"></div>
+              <div class="pg-bar" style="width:55px;height:22px;border-radius:5px;background:rgba(0,113,227,.4)"></div>
+            </div>
+            <div class="pg-img">
+              <span style="font-size:.62rem;color:rgba(255,255,255,.4)">hero-section</span>
+              <div class="pg-err">KR: H1 Taşması</div>
+            </div>
+            <div class="pg-bar w80"></div>
+            <div class="pg-bar w65" style="margin:.35rem 0"></div>
+            <div style="height:26px;background:rgba(255,214,10,.12);border:1.2px solid rgba(255,214,10,.5);border-radius:6px;display:flex;align-items:center;padding:0 .5rem;margin-bottom:.35rem">
+              <span style="font-size:.6rem;color:rgba(255,255,255,.45)">.cta-button — Kontrast: 2.8:1</span>
+            </div>
+            <div class="pg-bar w45"></div>
+          </div>
+        </div>
+      </div>
+      <!-- REPORT -->
+      <div class="bw-panel" id="sc-report" style="grid-template-columns:1fr">
+        <div style="padding:1.2rem">
+          <div class="panel-lbl" style="margin-bottom:.8rem">📋 Rapor Özeti — example-site.com</div>
+          <div class="metrics-row" style="margin-bottom:1rem">
+            <div class="met-card"><div class="met-n" style="color:#ff453a">2</div><div class="met-l">Kritik</div></div>
+            <div class="met-card"><div class="met-n" style="color:#ffd60a">2</div><div class="met-l">Uyarı</div></div>
+            <div class="met-card"><div class="met-n" style="color:#30d158">14</div><div class="met-l">Başarılı</div></div>
+            <div class="met-card"><div class="met-n" style="color:#0071e3">87</div><div class="met-l">Puan</div></div>
+          </div>
+          <div class="ai-box">
+            <div class="label">📊 Genel Değerlendirme</div>
+            <p>Siteniz iyi bir temele sahip. 2 kritik sorunu düzelttiğinizde puan 95+ seviyesine çıkacak. Kontrast oranları ve dokunma alanları öncelikli.</p>
+          </div>
+        </div>
+      </div>
+      <!-- CI -->
+      <div class="bw-panel" id="sc-ci" style="grid-template-columns:1fr">
+        <div style="padding:1.2rem;font-family:'Menlo',monospace;font-size:.73rem;line-height:1.9">
+          <div class="panel-lbl">.github/workflows/visionbird.yml</div>
+          <div style="margin-top:.8rem;color:rgba(255,255,255,.6)">
+            <span style="color:#6e6e6e">1 </span><span style="color:#ff7b72">name</span>: visionBird QA Testi<br>
+            <span style="color:#6e6e6e">3 </span><span style="color:#ff7b72">on</span>: <span style="color:#ff7b72">push</span>: branches: [<span style="color:#a5d6ff">"main"</span>]<br>
+            <span style="color:#6e6e6e">7 </span><span style="color:#ff7b72">jobs</span>:<br>
+            <span style="color:#6e6e6e">8 </span>  <span style="color:#ff7b72">visionbird</span>: runs-on: ubuntu-latest<br>
+            <span style="color:#6e6e6e">10</span>    <span style="color:#ff7b72">steps</span>:<br>
+            <span style="color:#6e6e6e">11</span>      - uses: actions/checkout@v4<br>
+            <span style="color:#6e6e6e">12</span>      - uses: <span style="color:#a5d6ff">visionbird/scan-action@v1</span><br>
+            <span style="color:#6e6e6e">13</span>        <span style="color:#ff7b72">with</span>:<br>
+            <span style="color:#6e6e6e">14</span>          url: ${{ env.DEPLOY_URL }}<br>
+            <span style="color:#6e6e6e">15</span>          fail-on-critical: <span style="color:#79c0ff">true</span><br>
+            <span style="color:#6e6e6e">16</span>          gemini-key: ${{ secrets.GEMINI_KEY }}
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
+</section>
 
-    <script>
-        // Enter tuşuna basılıp basılmadığını kontrol eden fonksiyon
-        function checkEnter(event) {
-            if (event.key === "Enter") {
-                havalandir();
-            }
-        }
+<!-- ============================================================
+     FEATURE SECTIONS — App
+============================================================ -->
+<section class="feat-s" id="feat-app">
+  <div class="feat-hd fu">
+    <p class="feat-eye">visionBird Uygulaması</p>
+    <h2 class="feat-h2">Testleri profesyonelce yaz ve <span>çalıştır</span></h2>
+  </div>
+  <div class="feat-lay">
+    <!-- Left sticky visual -->
+    <div class="feat-vis" id="fv-app">
+      <div class="fv">
+        <!-- Visual 0 -->
+        <div class="fvp on" id="fvp-a0">
+          <svg viewBox="0 0 300 225" width="100%" height="100%" style="padding:1rem">
+            <rect x="0" y="0" width="300" height="225" fill="#1c1c1e" rx="6"/>
+            <rect x="0" y="0" width="300" height="32" fill="#2c2c2e" rx="6"/>
+            <circle cx="16" cy="16" r="4.5" fill="#ff5f56"/><circle cx="29" cy="16" r="4.5" fill="#ffbd2e"/><circle cx="42" cy="16" r="4.5" fill="#27c93f"/>
+            <rect x="75" y="8" width="150" height="16" rx="4" fill="#3a3a3a"/>
+            <text x="150" y="19.5" font-size="7" fill="#777" text-anchor="middle" font-family="-apple-system,sans-serif">localhost:3000</text>
+            <!-- 4 browser cards -->
+            <rect x="14" y="44" width="58" height="46" rx="6" fill="none" stroke="#0071e3" stroke-width="1.2"/>
+            <circle cx="43" cy="60" r="9" fill="none" stroke="#34a853" stroke-width="1.8"/>
+            <circle cx="43" cy="60" r="9" fill="none" stroke="#ea4335" stroke-width="1.8" stroke-dasharray="14 14" stroke-dashoffset="-7"/>
+            <circle cx="43" cy="60" r="3.5" fill="#4285f4"/>
+            <text x="43" y="82" font-size="7" fill="rgba(255,255,255,.45)" text-anchor="middle" font-family="-apple-system,sans-serif">Chrome</text>
+            <rect x="80" y="44" width="58" height="46" rx="6" fill="#2c2c2e"/>
+            <ellipse cx="109" cy="60" rx="9" ry="9" fill="none" stroke="#ff7139" stroke-width="1.8"/>
+            <text x="109" y="82" font-size="7" fill="rgba(255,255,255,.45)" text-anchor="middle" font-family="-apple-system,sans-serif">Firefox</text>
+            <rect x="146" y="44" width="58" height="46" rx="6" fill="#2c2c2e"/>
+            <circle cx="175" cy="60" r="9" fill="none" stroke="#0078d4" stroke-width="1.8"/>
+            <path d="M168 56 Q175 51 182 56" fill="none" stroke="#0078d4" stroke-width="1.8"/>
+            <text x="175" y="82" font-size="7" fill="rgba(255,255,255,.45)" text-anchor="middle" font-family="-apple-system,sans-serif">Edge</text>
+            <rect x="212" y="44" width="58" height="46" rx="6" fill="#2c2c2e"/>
+            <path d="M232 54 Q241 48 250 54 Q250 68 241 68 Q232 68 232 54z" fill="none" stroke="#1997f0" stroke-width="1.8"/>
+            <text x="241" y="82" font-size="7" fill="rgba(255,255,255,.45)" text-anchor="middle" font-family="-apple-system,sans-serif">Safari</text>
+            <!-- Result bar -->
+            <rect x="14" y="104" width="262" height="17" rx="4" fill="rgba(48,209,88,.12)"/>
+            <rect x="14" y="104" width="210" height="17" rx="4" fill="rgba(48,209,88,.65)"/>
+            <text x="22" y="116.5" font-size="7" fill="rgba(255,255,255,.85)" font-family="-apple-system,sans-serif">✓ 4/4 tarayıcıda test geçti · 0 hata</text>
+            <!-- Stats -->
+            <text x="14" y="140" font-size="7" fill="rgba(255,255,255,.3)" font-family="-apple-system,sans-serif">247 kontrol · 0 başarısız · 32.4 saniye</text>
+          </svg>
+        </div>
+        <!-- Visual 1 -->
+        <div class="fvp" id="fvp-a1">
+          <svg viewBox="0 0 300 225" width="100%" height="100%" style="padding:1rem">
+            <rect x="0" y="0" width="300" height="225" fill="#1c1c1e" rx="6"/>
+            <rect x="0" y="0" width="300" height="32" fill="#2c2c2e" rx="6"/>
+            <circle cx="16" cy="16" r="4.5" fill="#ff5f56"/><circle cx="29" cy="16" r="4.5" fill="#ffbd2e"/><circle cx="42" cy="16" r="4.5" fill="#27c93f"/>
+            <text x="150" y="19.5" font-size="7" fill="#777" text-anchor="middle" font-family="-apple-system,sans-serif">visionBird Studio</text>
+            <rect x="12" y="42" width="276" height="46" rx="7" fill="rgba(0,113,227,.1)" stroke="rgba(0,113,227,.35)" stroke-width=".5"/>
+            <text x="20" y="56" font-size="7.5" fill="#0071e3" font-family="'Menlo',monospace">cy.prompt([</text>
+            <text x="28" y="70" font-size="7" fill="rgba(255,255,255,.55)" font-family="'Menlo',monospace">'Son hero bölümüne kaydır',</text>
+            <text x="28" y="82" font-size="7" fill="rgba(255,255,255,.55)" font-family="'Menlo',monospace">'Hızlı ürünleri ara',</text>
+            <rect x="20" y="84" width="1.5" height="9" fill="#0071e3" rx="1"><animate attributeName="opacity" values="1;0;1" dur="1.2s" repeatCount="indefinite"/></rect>
+            <text x="12" y="107" font-size="6.5" fill="rgba(255,255,255,.28)" font-family="-apple-system,sans-serif">✨ visionBird kodu oluşturuyor...</text>
+            <rect x="12" y="113" width="276" height="82" rx="6" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.07)" stroke-width=".5"/>
+            <text x="20" y="127" font-size="7" fill="#ff7b72" font-family="'Menlo',monospace">cy</text><text x="34" y="127" font-size="7" fill="rgba(255,255,255,.45)" font-family="'Menlo',monospace">.visit(</text><text x="68" y="127" font-size="7" fill="#a5d6ff" font-family="'Menlo',monospace">'/products'</text><text x="122" y="127" font-size="7" fill="rgba(255,255,255,.45)" font-family="'Menlo',monospace">)</text>
+            <text x="20" y="141" font-size="7" fill="#ff7b72" font-family="'Menlo',monospace">cy</text><text x="34" y="141" font-size="7" fill="rgba(255,255,255,.45)" font-family="'Menlo',monospace">.scrollTo(</text><text x="86" y="141" font-size="7" fill="#a5d6ff" font-family="'Menlo',monospace">'bottom'</text><text x="120" y="141" font-size="7" fill="rgba(255,255,255,.45)" font-family="'Menlo',monospace">)</text>
+            <text x="20" y="155" font-size="7" fill="#ff7b72" font-family="'Menlo',monospace">cy</text><text x="34" y="155" font-size="7" fill="rgba(255,255,255,.45)" font-family="'Menlo',monospace">.get(</text><text x="60" y="155" font-size="7" fill="#a5d6ff" font-family="'Menlo',monospace">'[data-search]'</text><text x="130" y="155" font-size="7" fill="rgba(255,255,255,.45)" font-family="'Menlo',monospace">).type(</text><text x="178" y="155" font-size="7" fill="#a5d6ff" font-family="'Menlo',monospace">'hız'</text><text x="198" y="155" font-size="7" fill="rgba(255,255,255,.45)" font-family="'Menlo',monospace">)</text>
+            <rect x="230" y="183" width="50" height="20" rx="5" fill="#0071e3"/>
+            <text x="255" y="197" font-size="8" fill="#fff" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Kaydet</text>
+          </svg>
+        </div>
+        <!-- Visual 2 -->
+        <div class="fvp" id="fvp-a2">
+          <svg viewBox="0 0 300 225" width="100%" height="100%" style="padding:1rem">
+            <rect x="0" y="0" width="300" height="225" fill="#1c1c1e" rx="6"/>
+            <rect x="0" y="0" width="300" height="32" fill="#2c2c2e" rx="6"/>
+            <circle cx="16" cy="16" r="4.5" fill="#ff5f56"/><circle cx="29" cy="16" r="4.5" fill="#ffbd2e"/><circle cx="42" cy="16" r="4.5" fill="#27c93f"/>
+            <text x="150" y="19.5" font-size="7" fill="#777" text-anchor="middle" font-family="-apple-system,sans-serif">Authentication.cy.js</text>
+            <rect x="12" y="40" width="276" height="16" rx="4" fill="rgba(255,214,10,.1)" stroke="rgba(255,214,10,.35)" stroke-width=".5"/>
+            <text x="20" y="51.5" font-size="7" fill="#ffd60a" font-family="-apple-system,sans-serif">#104 ⚡ KARARSIZ · Auth › Giriş › Admin Rolü</text>
+            <!-- Steps -->
+            <g transform="translate(12,72)">
+              <circle cx="0" cy="0" r="7" fill="#27c93f"/>
+              <text x="0" y="3.5" font-size="7" fill="#fff" text-anchor="middle">✓</text>
+              <line x1="7" y1="0" x2="49" y2="0" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+              <circle cx="56" cy="0" r="7" fill="#27c93f"/>
+              <text x="56" y="3.5" font-size="7" fill="#fff" text-anchor="middle">✓</text>
+              <line x1="63" y1="0" x2="105" y2="0" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+              <circle cx="112" cy="0" r="7" fill="#27c93f"/>
+              <text x="112" y="3.5" font-size="7" fill="#fff" text-anchor="middle">✓</text>
+              <line x1="119" y1="0" x2="161" y2="0" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+              <circle cx="168" cy="0" r="7" fill="#ff453a"/>
+              <text x="168" y="3.5" font-size="7" fill="#fff" text-anchor="middle">✗</text>
+              <circle cx="7" cy="15" r="2.5" fill="#ffd60a" opacity=".8"/>
+              <circle cx="112" cy="15" r="2.5" fill="#ffd60a" opacity=".8"/>
+            </g>
+            <rect x="12" y="103" width="276" height="42" rx="5" fill="rgba(255,69,58,.07)" stroke="rgba(255,69,58,.25)" stroke-width=".5"/>
+            <text x="20" y="116" font-size="7" fill="#ff453a" font-family="'Menlo',monospace">AssertionError: Zaman aşımı</text>
+            <text x="20" y="128" font-size="6.5" fill="rgba(255,255,255,.38)" font-family="'Menlo',monospace">API 504 hatası · 4.2 saniye</text>
+            <text x="20" y="139" font-size="6.5" fill="rgba(255,255,255,.38)" font-family="'Menlo',monospace">Beklenen: "Admin paneli" → Alınan: null</text>
+            <rect x="12" y="155" width="276" height="28" rx="5" fill="rgba(0,113,227,.1)" stroke="rgba(0,113,227,.25)" stroke-width=".5"/>
+            <text x="20" y="168" font-size="7" fill="#0071e3" font-family="-apple-system,sans-serif">🤖 AI: Retry mekanizması önerilir.</text>
+            <text x="20" y="179" font-size="6.5" fill="rgba(255,255,255,.38)" font-family="-apple-system,sans-serif">Timeout artırımı veya mock API kullanın.</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <!-- Timeline -->
+    <div class="feat-tl">
+      <div class="tl-in">
+        <div class="tl-ln"></div>
+        <div class="tl-dot on" data-g="a" data-n="0"></div>
+        <div class="tl-dot" data-g="a" data-n="1"></div>
+        <div class="tl-dot" data-g="a" data-n="2"></div>
+      </div>
+    </div>
+    <!-- Items -->
+    <div class="feat-items">
+      <div class="feat-item on" data-g="a" data-n="0">
+        <h3>Tarayıcıda doğrudan test et</h3>
+        <p>Uçtan uca ve bileşen testlerinizin gerçek zamanlı çalışmasını izleyin. visionBird'ün API'si, tarayıcının içerik oluşturabildiği kadar hızlı çalışır.</p>
+        <a href="#" class="feat-lnk">Daha Fazla Öğren →</a>
+      </div>
+      <div class="feat-item" data-g="a" data-n="1">
+        <h3>Testleri dakikalar içinde yaz ve kaydet</h3>
+        <p>visionBird Studio ile testleri daha hızlı oluşturun. Etkileşimleri kaydedin, AI önerileri alın veya akışları doğal Türkçe ile tanımlayın.</p>
+        <a href="#" class="feat-lnk">Daha Fazla Öğren →</a>
+      </div>
+      <div class="feat-item" data-g="a" data-n="2">
+        <h3>Hataları doğrudan tarayıcıda ayıkla</h3>
+        <p>Başarısız testleri bildiğiniz geliştirici araçlarıyla hata ayıklayın. Zaman çizelgesinde geri sarın, DOM durumunu inceleyin, AI'dan çözüm önerisi alın.</p>
+        <a href="#" class="feat-lnk">Daha Fazla Öğren →</a>
+      </div>
+    </div>
+  </div>
+</section>
 
-        async function havalandir() {
-            const url = document.getElementById('urlInput').value;
-            const isSimulated = document.getElementById('simSwitch').checked;
+<!-- ============================================================
+     COVERAGE METRICS (NEW QA FEATURE)
+============================================================ -->
+<section id="coverage">
+<div class="inn">
+  <p class="s-eye fu" style="color:rgba(255,255,255,.4);text-align:center">Test Metrikleri</p>
+  <h2 class="s-h2 fu fd1" style="color:#fff;text-align:center">Kapsamlı Kalite Güvencesi</h2>
+  <p class="s-sub fu fd2" style="color:rgba(255,255,255,.42);margin:0 auto;text-align:center">Her boyutta, her tarayıcıda, her cihazda kusursuz test kapsamı.</p>
+  <div class="cov-grid">
+    <div class="cov-card fu fd1 ring-trigger" data-val="95" data-color="#0071e3">
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 90 90" width="90" height="90">
+          <circle class="ring-track" cx="45" cy="45" r="39"/>
+          <circle class="ring-fill" cx="45" cy="45" r="39" stroke="#0071e3" style="--off:17"/>
+        </svg>
+        <div class="ring-val">95%</div>
+      </div>
+      <div class="cov-title">Görsel Test</div>
+      <div class="cov-desc">Piksel düzeyinde görsel regresyon tespiti</div>
+    </div>
+    <div class="cov-card fu fd2 ring-trigger" data-val="88" data-color="#30d158">
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 90 90" width="90" height="90">
+          <circle class="ring-track" cx="45" cy="45" r="39"/>
+          <circle class="ring-fill" cx="45" cy="45" r="39" stroke="#30d158" style="--off:30"/>
+        </svg>
+        <div class="ring-val">88%</div>
+      </div>
+      <div class="cov-title">Performans</div>
+      <div class="cov-desc">Core Web Vitals ve sayfa hızı analizi</div>
+    </div>
+    <div class="cov-card fu fd3 ring-trigger" data-val="92" data-color="#ffd60a">
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 90 90" width="90" height="90">
+          <circle class="ring-track" cx="45" cy="45" r="39"/>
+          <circle class="ring-fill" cx="45" cy="45" r="39" stroke="#ffd60a" style="--off:20"/>
+        </svg>
+        <div class="ring-val">92%</div>
+      </div>
+      <div class="cov-title">Erişebilirlik</div>
+      <div class="cov-desc">WCAG 2.1 AA/AAA uyumluluk kontrolü</div>
+    </div>
+    <div class="cov-card fu fd4 ring-trigger" data-val="97" data-color="#bf5af2">
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 90 90" width="90" height="90">
+          <circle class="ring-track" cx="45" cy="45" r="39"/>
+          <circle class="ring-fill" cx="45" cy="45" r="39" stroke="#bf5af2" style="--off:7"/>
+        </svg>
+        <div class="ring-val">97%</div>
+      </div>
+      <div class="cov-title">Mobil Uyumluluk</div>
+      <div class="cov-desc">iOS, Android ve tablet test kapsamı</div>
+    </div>
+  </div>
+</div>
+</section>
 
-            if(!url) return alert("Lütfen bir URL girin!");
+<!-- ============================================================
+     TESTIMONIALS
+============================================================ -->
+<section id="social">
+<div class="soc-in">
+  <div class="soc-hd">
+    <h2 class="soc-h2 fu">Geliştiriciler tarafından <span class="g">sevildi</span>,<br>kurumsal ekipler tarafından <span class="b">güvenildi</span></h2>
+    <p class="soc-sub fu fd1">visionBird, dünyanın her yerindeki geliştirici ekiplerinin modern uygulamaları test etmesini kolaylaştırır.</p>
+    <div class="stats fu fd2">
+      <div><span class="stat-n">10K+</span><span class="stat-l">Haftalık Tarama</span></div>
+      <div><span class="stat-n">500+</span><span class="stat-l">Aktif Kullanıcı</span></div>
+      <div><span class="stat-n">2.8K+</span><span class="stat-l">GitHub Yıldızı</span></div>
+    </div>
+  </div>
+  <div class="tw-wrap fu fd3">
+    <div class="tw-track" id="tw-track" role="list">
+      <div class="tw-card" role="listitem"><div class="tc-h"><div class="tc-av" style="background:#0071e3">AK</div><div><div class="tc-nm">Ahmet Kaya</div><div class="tc-hd">@ahmet_dev</div></div><svg class="tc-x" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.76l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div><p class="tc-txt">visionBird deployment öncesi görsel hataları yakalamak için harika. Her push'ta otomatik CI/CD entegrasyonu çok değerli! Artık "neden prod'da bozuldu?" diye sormuyorum 🚀</p><div class="tc-ft"><span class="tc-dt">14 Nis 2025</span><span class="tc-lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>142</span></div></div>
+      <div class="tw-card" role="listitem"><div class="tc-h"><div class="tc-av" style="background:#ff6b6b">ZY</div><div><div class="tc-nm">Zeynep Yıldız</div><div class="tc-hd">@zeynep_ux</div></div><svg class="tc-x" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.76l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div><p class="tc-txt">UI regresyon testleri artık çok daha kolay! Görsel hata ayıklama özelliği sayesinde CSS sorunlarını anında tespit ediyorum. Tüm frontend ekibine tavsiye ederim ✨</p><div class="tc-ft"><span class="tc-dt">22 Mar 2025</span><span class="tc-lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>89</span></div></div>
+      <div class="tw-card" role="listitem"><div class="tc-h"><div class="tc-av" style="background:#27c93f">MÖ</div><div><div class="tc-nm">Mert Öztürk</div><div class="tc-hd">@mert_frontend</div></div><svg class="tc-x" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.76l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div><p class="tc-txt">Gemini Vision AI entegrasyonu gerçekten etkileyici. Sadece teknik hataları değil görsel kaliteyi de değerlendiriyor. Open source olması büyük artı 👏</p><div class="tc-ft"><span class="tc-dt">5 May 2025</span><span class="tc-lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>217</span></div></div>
+      <div class="tw-card" role="listitem"><div class="tc-h"><div class="tc-av" style="background:#8b5cf6">SB</div><div><div class="tc-nm">Sara Bilgin</div><div class="tc-hd">@sara_qa</div></div><svg class="tc-x" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.76l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div><p class="tc-txt">5 yıllık QA deneyimimde gördüğüm en iyi görsel test aracı. Ekibimizin bug bulma oranı %40 arttı, test süresi %60 azaldı. Playwright + Gemini kombinasyonu mükemmel 🎯</p><div class="tc-ft"><span class="tc-dt">1 May 2025</span><span class="tc-lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>334</span></div></div>
+      <div class="tw-card" role="listitem"><div class="tc-h"><div class="tc-av" style="background:#ef4444">CK</div><div><div class="tc-nm">Can Kılıç</div><div class="tc-hd">@can_devops</div></div><svg class="tc-x" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.76l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div><p class="tc-txt">GitHub Actions entegrasyonu 10 dakika sürdü. Her PR'da otomatik görsel test, yanlış geçen şey varsa anında Slack bildirimi. DevOps ekibi olarak tam istediğimiz 🔧</p><div class="tc-ft"><span class="tc-dt">28 Nis 2025</span><span class="tc-lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>178</span></div></div>
+      <div class="tw-card" role="listitem"><div class="tc-h"><div class="tc-av" style="background:#f59e0b">NA</div><div><div class="tc-nm">Nil Arslan</div><div class="tc-hd">@nil_web</div></div><svg class="tc-x" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.76l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div><p class="tc-txt">Teknik bilgim çok değil ama visionBird'ü rahatlıkla kullanabiliyorum. Raporlar sade Türkçe, ne düzeltmem gerektiğini net anlatıyor 📊</p><div class="tc-ft"><span class="tc-dt">19 Nis 2025</span><span class="tc-lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>95</span></div></div>
+      <div class="tw-card" role="listitem"><div class="tc-h"><div class="tc-av" style="background:#14b8a6">EÇ</div><div><div class="tc-nm">Emre Çelik</div><div class="tc-hd">@emre_startup</div></div><svg class="tc-x" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.76l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div><p class="tc-txt">Startup olarak ayrı QA ekibi kuramıyorduk. visionBird bu sorunu çözdü. 2 geliştiriciyle enterprise kalitesinde test süreci yürütüyoruz 🚀</p><div class="tc-ft"><span class="tc-dt">8 May 2025</span><span class="tc-lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>461</span></div></div>
+      <div class="tw-card" role="listitem"><div class="tc-h"><div class="tc-av" style="background:#ec4899">PD</div><div><div class="tc-nm">Pınar Demir</div><div class="tc-hd">@pinar_pm</div></div><svg class="tc-x" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.76l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div><p class="tc-txt">PM olarak geliştiricilerle ortak dil konuşamıyorduk. Görsel raporlar sayesinde "bu buton yanlış renkte" diyebiliyorum, kod bilmeden! Sprint retrolara girdi 😄</p><div class="tc-ft"><span class="tc-dt">3 May 2025</span><span class="tc-lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>203</span></div></div>
+    </div>
+    <div class="tw-dots" role="tablist" aria-label="Tweet carousel navigasyonu">
+      <button class="tdot on" onclick="scrollTw(0)" aria-label="1. yorum"></button>
+      <button class="tdot" onclick="scrollTw(1)" aria-label="2. yorum"></button>
+      <button class="tdot" onclick="scrollTw(2)" aria-label="3. yorum"></button>
+      <button class="tdot" onclick="scrollTw(3)" aria-label="4. yorum"></button>
+      <button class="tdot" onclick="scrollTw(4)" aria-label="5. yorum"></button>
+    </div>
+  </div>
+</div>
+</section>
 
-            const btn = document.getElementById('scanBtn');
-            const loader = document.getElementById('loader');
-            const resultBox = document.getElementById('resultBox');
-            const reportBox = document.getElementById('reportBox');
+<!-- ============================================================
+     PRICING (NEW)
+============================================================ -->
+<section id="pricing">
+<div class="inn" style="text-align:center">
+  <p class="s-eye fu" style="text-align:center">Fiyatlandırma</p>
+  <h2 class="s-h2 fu fd1" style="text-align:center">Her ekip için doğru plan</h2>
+  <p class="s-sub fu fd2" style="margin:0 auto">Kart numarası gerekmez. İstediğinizde yükseltin.</p>
+  <div class="pr-toggle fu fd3">
+    <button class="pr-tab on" onclick="prTab('ay',this)">Aylık</button>
+    <button class="pr-tab" onclick="prTab('yil',this)">Yıllık <span style="font-size:.65rem;background:rgba(0,180,100,.15);color:#1a9e57;padding:.1rem .4rem;border-radius:4px;margin-left:.25rem">%20 İndirim</span></button>
+  </div>
+  <div class="pr-grid">
+    <!-- Free -->
+    <div class="pr-card fu fd1">
+      <div class="pr-tier">Başlangıç</div>
+      <div class="pr-price"><span class="pr-cur">₺</span><span>0</span><span class="pr-per">/ay</span></div>
+      <ul class="pr-features">
+        <li class="pr-feat"><div class="chk chk-bl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Ayda 10 tarama</span></li>
+        <li class="pr-feat"><div class="chk chk-bl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>PDF rapor çıktısı</span></li>
+        <li class="pr-feat"><div class="chk chk-bl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Temel AI analizi</span></li>
+        <li class="pr-feat"><div class="chk chk-bl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Topluluk desteği</span></li>
+      </ul>
+      <button class="pr-btn pr-btn-out">Ücretsiz Başla</button>
+    </div>
+    <!-- Pro - Popular -->
+    <div class="pr-card pop fu fd2">
+      <div class="pr-badge">Popüler</div>
+      <div class="pr-tier">Pro</div>
+      <div class="pr-price" style="color:#fff"><span class="pr-cur">₺</span><span id="pr-pro">99</span><span class="pr-per">/ay</span></div>
+      <ul class="pr-features">
+        <li class="pr-feat"><div class="chk chk-wh"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Ayda 500 tarama</span></li>
+        <li class="pr-feat"><div class="chk chk-wh"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>CI/CD entegrasyonu</span></li>
+        <li class="pr-feat"><div class="chk chk-wh"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Gelişmiş AI analizi</span></li>
+        <li class="pr-feat"><div class="chk chk-wh"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>API erişimi</span></li>
+        <li class="pr-feat"><div class="chk chk-wh"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Öncelikli destek</span></li>
+      </ul>
+      <button class="pr-btn pr-btn-bk">Hemen Başla</button>
+    </div>
+    <!-- Team -->
+    <div class="pr-card fu fd3">
+      <div class="pr-tier">Takım</div>
+      <div class="pr-price"><span class="pr-cur">₺</span><span id="pr-team">299</span><span class="pr-per">/ay</span></div>
+      <ul class="pr-features">
+        <li class="pr-feat"><div class="chk chk-bl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Sınırsız tarama</span></li>
+        <li class="pr-feat"><div class="chk chk-bl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Takım yönetimi (10 üye)</span></li>
+        <li class="pr-feat"><div class="chk chk-bl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Paralel test çalıştırma</span></li>
+        <li class="pr-feat"><div class="chk chk-bl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>Özel rapor şablonları</span></li>
+        <li class="pr-feat"><div class="chk chk-bl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><span>7/24 öncelikli destek</span></li>
+      </ul>
+      <button class="pr-btn pr-btn-bl">Satışla İletişime Geç</button>
+    </div>
+  </div>
+</div>
+</section>
 
-            btn.disabled = true;
-            resultBox.style.display = 'none';
-            loader.style.display = 'block';
+<!-- ============================================================
+     INTEGRATIONS (NEW)
+============================================================ -->
+<section id="integrations">
+<div class="inn" style="text-align:center">
+  <p class="s-eye fu" style="text-align:center">Entegrasyonlar</p>
+  <h2 class="s-h2 fu fd1" style="text-align:center">Her CI sağlayıcısıyla entegre ol</h2>
+  <p class="s-sub fu fd2" style="margin:0 auto">Mevcut iş akışlarınıza kolayca entegre edin. Docker desteği de dahil.</p>
+  <div class="int-grid">
+    <div class="int-card fu fd1"><div class="int-ico" style="background:#24292f">⬡</div><div class="int-nm">GitHub</div></div>
+    <div class="int-card fu fd2"><div class="int-ico" style="background:#e24329">🦊</div><div class="int-nm">GitLab</div></div>
+    <div class="int-card fu fd3"><div class="int-ico" style="background:#0052cc">🔵</div><div class="int-nm">Jira</div></div>
+    <div class="int-card fu fd4"><div class="int-ico" style="background:#4a154b">💬</div><div class="int-nm">Slack</div></div>
+    <div class="int-card fu fd5"><div class="int-ico" style="background:#d24939">🔴</div><div class="int-nm">Jenkins</div></div>
+    <div class="int-card fu fd6"><div class="int-ico" style="background:#343434">⚫</div><div class="int-nm">Docker</div></div>
+    <div class="int-card fu fd1"><div class="int-ico" style="background:#005571">🔷</div><div class="int-nm">Azure DevOps</div></div>
+    <div class="int-card fu fd2"><div class="int-ico" style="background:#00B0D8">🔵</div><div class="int-nm">CircleCI</div></div>
+    <div class="int-card fu fd3"><div class="int-ico" style="background:#1e293b">🔗</div><div class="int-nm">Bitbucket</div></div>
+    <div class="int-card fu fd4"><div class="int-ico" style="background:#0078d4">🪟</div><div class="int-nm">Teams</div></div>
+    <div class="int-card fu fd5"><div class="int-ico" style="background:#000">🔲</div><div class="int-nm">Linear</div></div>
+    <div class="int-card fu fd6"><div class="int-ico" style="background:#f59e0b">📋</div><div class="int-nm">Notion</div></div>
+  </div>
+</div>
+</section>
 
-            try {
-                const response = await fetch('http://127.0.0.1:8000/api/tara', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        url: url,
-                        hata_simulasyonu: isSimulated 
-                    })
-                });
+<!-- ============================================================
+     TEST FORM
+============================================================ -->
+<section id="test">
+<div class="inn" style="text-align:center">
+  <p class="s-eye fu" style="color:rgba(255,255,255,.4)">Dene</p>
+  <h2 class="s-h2 fu fd1" style="color:#fff">Hemen Test Et</h2>
+  <p class="s-sub fu fd2" style="color:rgba(255,255,255,.42);margin:0 auto">Sitenizin adresini yazın, gerisini bırakın bize.</p>
+  <div class="test-wrap-in">
+    <div class="t-inp-row fu fd3">
+      <input type="url" id="t-url" class="t-inp" placeholder="https://siteniz.com" autocomplete="url" inputmode="url" onkeydown="if(event.key==='Enter')launch()"/>
+      <button class="t-btn" id="t-scan" onclick="launch()">🚀 Analiz Et</button>
+    </div>
+    <div class="t-chk fu fd4">
+      <input type="checkbox" id="t-sim" name="simulation">
+      <label for="t-sim">🧪 Hata Simülasyonu Modu</label>
+    </div>
+    <div id="t-loader" class="loader" aria-live="polite">⏳ visionBird analiz ediyor...</div>
+    <div id="t-result" class="t-result" role="alert" aria-live="polite">
+      <div class="t-tag">✅ Analiz Tamamlandı</div>
+      <div id="t-txt" class="t-txt"></div>
+    </div>
+  </div>
+</div>
+</section>
 
-                const data = await response.json();
-                
-                if(data.durum === "basarili") {
-                    reportBox.textContent = data.yapay_zeka_raporu;
-                    resultBox.style.display = 'block';
-                } else {
-                    alert("Bir hata oluştu!");
-                }
-            } catch (error) {
-                alert("Sunucuya bağlanılamadı. API açık mı?");
-            } finally {
-                btn.disabled = false;
-                loader.style.display = 'none';
-            }
-        }
-    </script>
+<!-- ============================================================
+     AI ASSISTANT
+============================================================ -->
+<section id="ai">
+<div class="inn" style="text-align:center">
+  <p class="s-eye fu">AI Asistan</p>
+  <h2 class="s-h2 fu fd1">Sorun Var mı? Hemen Sor</h2>
+  <p class="s-sub fu fd2" style="margin:0 auto">QA testleri ve web tasarım sorunlarınızı çözmenize yardımcı olur.</p>
+  <div class="ai-card fu fd3">
+    <div class="ai-hd">
+      <div class="ai-av" aria-hidden="true">🦅</div>
+      <div><div class="ai-nm">visionBird AI</div><div class="ai-st">● Çevrimiçi</div></div>
+    </div>
+    <div class="chat-msgs" id="chat-msgs" aria-live="polite" aria-label="Sohbet mesajları">
+      <div class="msg bot"><div class="bubble">Merhaba! QA testleri ve web tasarım sorunlarınız hakkında yardımcı olmaya hazırım. Ne sormak istersiniz?</div></div>
+    </div>
+    <div class="ai-inp-r">
+      <input type="text" class="ai-inp" id="ai-inp" placeholder="Sorunuzu yazın..." aria-label="AI asistana soru sor" onkeydown="if(event.key==='Enter')sendMsg()"/>
+      <button class="ai-snd" onclick="sendMsg()" aria-label="Gönder">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+</section>
 
+<!-- ============================================================
+     FAQ
+============================================================ -->
+<section id="faq">
+<div class="inn" style="text-align:center">
+  <p class="s-eye fu">Sıkça Sorulanlar</p>
+  <h2 class="s-h2 fu fd1">Aklınızdaki Sorular</h2>
+  <div class="faq-l" style="text-align:left">
+    <div class="faq-row fu"><div class="faq-q" onclick="faqT(this)"><span>visionBird sitenize zarar verir mi?</span><span class="faq-ic">+</span></div><div class="faq-a">Hayır. visionBird yalnızca ekran görüntüsü alır ve analiz eder. Sitenizdeki hiçbir dosya veya kod üzerinde değişiklik yapmaz.</div></div>
+    <div class="faq-row fu fd1"><div class="faq-q" onclick="faqT(this)"><span>Verilerim nereye gidiyor?</span><span class="faq-ic">+</span></div><div class="faq-a">Sitenizin adresi dışında hiçbir bilgi kalıcı olarak kaydedilmez. Analiz tamamlandığında ekran görüntüsü silinir. KVKK uyumlu çalışıyoruz.</div></div>
+    <div class="faq-row fu fd2"><div class="faq-q" onclick="faqT(this)"><span>Analiz ne kadar sürer?</span><span class="faq-ic">+</span></div><div class="faq-a">Ortalama 20-40 saniye. Sitenizin yükleme hızına bağlı değişir.</div></div>
+    <div class="faq-row fu fd3"><div class="faq-q" onclick="faqT(this)"><span>Teknik bilgi gerekiyor mu?</span><span class="faq-ic">+</span></div><div class="faq-a">Hayır. Sadece URL bilmeniz yeterli. Rapor tamamen Türkçe ve anlaşılır bir dilde sunulur.</div></div>
+    <div class="faq-row fu fd4"><div class="faq-q" onclick="faqT(this)"><span>CI/CD entegrasyonu nasıl yapılır?</span><span class="faq-ic">+</span></div><div class="faq-a">GitHub Actions ile entegrasyon 10 dakikadan kısa sürer. Dokümantasyon bölümümüzde adım adım kılavuz bulabilirsiniz.</div></div>
+    <div class="faq-row fu fd5"><div class="faq-q" onclick="faqT(this)"><span>WCAG erişebilirlik testleri yapıyor mu?</span><span class="faq-ic">+</span></div><div class="faq-a">Evet. WCAG 2.1 AA ve AAA standartlarını otomatik olarak kontrol eder. Renk kontrastı, alt metin eksikliği, klavye navigasyonu gibi konuları raporlar.</div></div>
+  </div>
+</div>
+</section>
+
+<!-- ============================================================
+     CTA BANNER
+============================================================ -->
+<section id="cta-banner">
+<div class="inn">
+  <h2 class="cta-h fu">Bugün başlayın.<br><span>30 saniyede</span> ilk testiniz.</h2>
+  <p class="cta-sub fu fd1">Kart numarası gerekmez. Kurulum yok. Sadece URL yazın.</p>
+  <div class="cta-btns fu fd2">
+    <a href="#test" class="btn-primary">Ücretsiz Test Et</a>
+    <a href="#pricing" class="btn-line" style="border-color:rgba(255,255,255,.3);color:#fff">Planları İncele</a>
+  </div>
+</div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer>
+<div class="ft-in">
+  <div class="ft-grid">
+    <div>
+      <div class="ft-logo">
+        <svg viewBox="0 0 200 200" width="20" height="20" aria-hidden="true">
+          <polygon points="50,180 50,100 100,50 160,60 190,90 150,120 120,180" fill="rgba(255,255,255,.75)"/>
+          <polygon points="160,60 190,90 150,120" fill="#0071e3"/>
+          <circle cx="115" cy="85" r="7" fill="none" stroke="#0071e3" stroke-width="2"/>
+          <circle cx="115" cy="85" r="2.5" fill="#0071e3"/>
+        </svg>
+        <span class="ft-logo-t">visionBird</span>
+      </div>
+      <p class="ft-tag">Yapay zeka destekli görsel QA testi. Web sitenizin tasarımını saniyeler içinde analiz eder.</p>
+      <div class="ft-soc" aria-label="Sosyal medya linkleri">
+        <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+        <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+        <a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+      </div>
+      <div class="app-btns">
+        <a href="#" class="app-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg><div class="app-txt"><span class="app-sub">App Store'dan İndir</span><span class="app-nm">App Store</span></div></a>
+        <a href="#" class="app-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76c.35.2.74.24 1.12.12l11.76-6.76-2.7-2.76-10.18 9.4zM20.76 10.2L17.64 8.4l-3.06 2.94 3.06 3.06 3.12-1.86c.9-.52.9-1.84 0-2.34zM1.44.5C1.14.82 1 1.28 1 1.88v20.24c0 .6.14 1.06.44 1.38l.06.06 11.34-11.34v-.28L1.44.5zm2.88 2.1l14.28 8.14-2.88 2.88L4.32 2.6z"/></svg><div class="app-txt"><span class="app-sub">Google Play'den İndir</span><span class="app-nm">Google Play</span></div></a>
+      </div>
+    </div>
+    <div><div class="ft-col-h">Ürün</div><ul class="ft-col-l"><li><a href="#">visionBird Uygulaması</a></li><li><a href="#">visionBird Bulutu</a></li><li><a href="#">UI Kapsamı</a></li><li><a href="#">Erişebilirlik</a></li><li><a href="#">Fiyatlandırma</a></li></ul></div>
+    <div><div class="ft-col-h">Kaynaklar</div><ul class="ft-col-l"><li><a href="#">Dokümantasyon</a></li><li><a href="#">API Referansı</a></li><li><a href="#">Başlarken</a></li><li><a href="#">Blog</a></li><li><a href="#">Değişiklik Günlüğü</a></li></ul></div>
+    <div><div class="ft-col-h">Şirket</div><ul class="ft-col-l"><li><a href="#">Hakkımızda</a></li><li><a href="#">Kariyer</a></li><li><a href="#">İletişim</a></li><li><a href="#">Gizlilik</a></li><li><a href="#">Şartlar</a></li></ul></div>
+  </div>
+  <div class="ft-bot">
+    <p class="ft-copy">© 2025 visionBird. Tüm hakları saklıdır.</p>
+    <div class="ft-lnks"><a href="#">Gizlilik</a><a href="#">Şartlar</a><a href="#">KVKK</a><a href="#">İletişim</a></div>
+  </div>
+</div>
+</footer>
+
+<!-- ============================================================
+     SCRIPTS — Three.js only if capable, otherwise CSS hero
+============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================================================
+   DEVICE DETECTION — Performance Gate
+============================================================ */
+var UA = navigator.userAgent;
+var IS_MOBILE = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini/i.test(UA)
+             || window.innerWidth < 768;
+var IS_IOS = /iPhone|iPad|iPod/i.test(UA);
+var LOW_END = (navigator.hardwareConcurrency || 4) <= 2;
+var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var USE_GL = !IS_MOBILE && !LOW_END && !REDUCED && typeof THREE !== 'undefined';
+
+/* ============================================================
+   CSS HERO DOTS (Mobile/Fallback)
+============================================================ */
+if (!USE_GL) {
+  document.getElementById('hero-canvas').style.display = 'none';
+  var dd = document.getElementById('hero-dots');
+  if (dd) {
+    for (var i = 0; i < 12; i++) {
+      var d = document.createElement('div');
+      d.className = 'hero-dot';
+      var sz = (Math.random() * 4 + 2) + 'px';
+      d.style.cssText = [
+        'width:' + sz,
+        'height:' + sz,
+        'left:' + (Math.random() * 100) + '%',
+        'top:' + (Math.random() * 100) + '%',
+        'animation-delay:' + (Math.random() * 3) + 's',
+        'animation-duration:' + (2.5 + Math.random() * 2) + 's'
+      ].join(';');
+      dd.appendChild(d);
+    }
+  }
+}
+
+/* ============================================================
+   THREE.JS — Only on capable desktop
+============================================================ */
+if (USE_GL) {
+  (function () {
+    var canvas = document.getElementById('hero-canvas');
+    if (!canvas) return;
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, alpha: true, powerPreference: 'low-power' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0xffffff, 0);
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 55;
+
+    var N = 700; // Reduced from 1400 for performance
+    var pos = new Float32Array(N * 3);
+    var col = new Float32Array(N * 3);
+    for (var i = 0; i < N; i++) {
+      pos[i*3]   = (Math.random() - .5) * 140;
+      pos[i*3+1] = (Math.random() - .5) * 100;
+      pos[i*3+2] = (Math.random() - .5) * 80;
+      if (Math.random() < .22) {
+        col[i*3] = 0; col[i*3+1] = 113/255; col[i*3+2] = 227/255;
+      } else {
+        col[i*3] = col[i*3+1] = col[i*3+2] = .45 + Math.random() * .25;
+      }
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+    var mat = new THREE.PointsMaterial({ size: .45, vertexColors: true, transparent: true, opacity: .5, sizeAttenuation: true });
+    var pts = new THREE.Points(geo, mat);
+    scene.add(pts);
+
+    // Sparse lines
+    var lm = new THREE.LineBasicMaterial({ color: 0x0071e3, transparent: true, opacity: .025 });
+    for (var j = 0; j < 45; j++) {
+      var p1 = new THREE.Vector3((Math.random()-.5)*130, (Math.random()-.5)*90, (Math.random()-.5)*55);
+      var p2 = new THREE.Vector3(p1.x+(Math.random()-.5)*25, p1.y+(Math.random()-.5)*25, p1.z+(Math.random()-.5)*18);
+      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1, p2]), lm));
+    }
+
+    var mx = 0, my = 0;
+    document.addEventListener('mousemove', function(e) {
+      mx = (e.clientX / window.innerWidth  - .5) * .2;
+      my = -(e.clientY / window.innerHeight - .5) * .16;
+    }, { passive: true });
+
+    var t = 0, rafId = null, visible = true;
+
+    function tick() {
+      if (!visible) return;
+      rafId = requestAnimationFrame(tick);
+      t += .0018;
+      pts.rotation.y = t * .038 + mx;
+      pts.rotation.x = Math.sin(t * .07) * .035 + my * .35;
+      renderer.render(scene, camera);
+    }
+
+    // Pause when hero not visible (major performance fix!)
+    var heroObs = new IntersectionObserver(function(entries) {
+      visible = entries[0].isIntersecting;
+      if (visible && !rafId) tick();
+    }, { threshold: 0 });
+    heroObs.observe(document.getElementById('hero'));
+
+    // Pause when tab not active
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      } else if (visible) {
+        tick();
+      }
+    });
+
+    window.addEventListener('resize', function() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }, { passive: true });
+
+    tick(); // Start
+  })();
+}
+
+/* ============================================================
+   INTERSECTION OBSERVER — Fade-up animations (replaces GSAP)
+============================================================ */
+(function () {
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('vis');
+        io.unobserve(e.target); // Stop after animating
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.fu').forEach(function(el) {
+    io.observe(el);
+  });
+})();
+
+/* ============================================================
+   FEATURE SECTION — Sticky scroll with IntersectionObserver
+============================================================ */
+(function () {
+  if (window.innerWidth < 960) return; // Skip on mobile
+
+  function setupGroup(grp) {
+    var items = document.querySelectorAll('.feat-item[data-g="' + grp + '"]');
+    var dots  = document.querySelectorAll('.tl-dot[data-g="' + grp + '"]');
+    if (!items.length) return;
+
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (!e.isIntersecting) return;
+        var n = parseInt(e.target.getAttribute('data-n'));
+        // Items
+        items.forEach(function(i) { i.classList.remove('on'); });
+        e.target.classList.add('on');
+        // Dots
+        dots.forEach(function(d) { d.classList.remove('on'); });
+        if (dots[n]) dots[n].classList.add('on');
+        // Visuals
+        var prefix = grp === 'a' ? 'a' : 'cl';
+        [0,1,2].forEach(function(i) {
+          var v = document.getElementById('fvp-' + prefix + i);
+          if (v) v.classList.remove('on');
+        });
+        var tv = document.getElementById('fvp-' + prefix + n);
+        if (tv) tv.classList.add('on');
+      });
+    }, { threshold: 0.45, rootMargin: '-15% 0px -15% 0px' });
+
+    items.forEach(function(item) { io.observe(item); });
+  }
+
+  setupGroup('a');
+  setupGroup('cl');
+})();
+
+/* ============================================================
+   COVERAGE RINGS — Animate on scroll
+============================================================ */
+(function () {
+  var triggered = false;
+  var rings = document.querySelectorAll('.ring-fill');
+  if (!rings.length) return;
+
+  var io = new IntersectionObserver(function(entries) {
+    if (triggered || !entries[0].isIntersecting) return;
+    triggered = true;
+    rings.forEach(function(ring) {
+      // Small delay to let CSS transition work
+      setTimeout(function() {
+        ring.classList.add('anim');
+      }, 100);
+    });
+    io.disconnect();
+  }, { threshold: 0.3 });
+
+  var cov = document.getElementById('coverage');
+  if (cov) io.observe(cov);
+})();
+
+/* ============================================================
+   TWEET CAROUSEL
+============================================================ */
+function scrollTw(n) {
+  var track = document.getElementById('tw-track');
+  if (!track) return;
+  var card = track.querySelector('.tw-card');
+  var w = card ? (card.offsetWidth + 14) : 314;
+  track.scrollTo({ left: n * w, behavior: 'smooth' });
+  document.querySelectorAll('.tdot').forEach(function(d, i) {
+    d.classList.toggle('on', i === n);
+  });
+}
+(function () {
+  var track = document.getElementById('tw-track');
+  if (!track) return;
+  var t;
+  track.addEventListener('scroll', function() {
+    clearTimeout(t);
+    t = setTimeout(function() {
+      var card = track.querySelector('.tw-card');
+      var w = card ? (card.offsetWidth + 14) : 314;
+      var n = Math.round(track.scrollLeft / w);
+      document.querySelectorAll('.tdot').forEach(function(d, i) {
+        d.classList.toggle('on', i === n);
+      });
+    }, 80);
+  }, { passive: true });
+})();
+
+/* ============================================================
+   SHOWCASE TABS
+============================================================ */
+function scTab(id, btn) {
+  document.querySelectorAll('.sc-tab').forEach(function(t) { t.classList.remove('on'); });
+  btn.classList.add('on');
+  ['scan','report','ci'].forEach(function(k) {
+    var p = document.getElementById('sc-' + k);
+    if (p) { p.classList.remove('on'); p.style.display = 'none'; }
+  });
+  var el = document.getElementById('sc-' + id);
+  if (el) { el.style.display = 'grid'; el.classList.add('on'); }
+  var urls = { scan: 'visionbird.app/scan', report: 'visionbird.app/report', ci: '.github/workflows/visionbird.yml' };
+  var ub = document.getElementById('bw-url');
+  if (ub) ub.textContent = urls[id] || '';
+}
+
+/* ============================================================
+   PRICING TOGGLE
+============================================================ */
+var PR_PRICES = { ay: { pro: 99, team: 299 }, yil: { pro: 79, team: 239 } };
+function prTab(mode, btn) {
+  document.querySelectorAll('.pr-tab').forEach(function(t) { t.classList.remove('on'); });
+  btn.classList.add('on');
+  var p = PR_PRICES[mode] || PR_PRICES.ay;
+  document.getElementById('pr-pro').textContent  = p.pro;
+  document.getElementById('pr-team').textContent = p.team;
+}
+
+/* ============================================================
+   FAQ
+============================================================ */
+function faqT(el) {
+  var a = el.nextElementSibling;
+  var ic = el.querySelector('.faq-ic');
+  var isOpen = a.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-a').forEach(function(x) { x.classList.remove('open'); });
+  document.querySelectorAll('.faq-ic').forEach(function(x) { x.textContent = '+'; x.style.transform = ''; });
+  // Toggle current
+  if (!isOpen) {
+    a.classList.add('open');
+    ic.textContent = '−';
+    ic.style.transform = 'rotate(45deg)';
+  }
+}
+
+/* ============================================================
+   MOBILE MENU
+============================================================ */
+var mobOpen = false;
+function toggleMob() {
+  mobOpen = !mobOpen;
+  var mob = document.getElementById('mob');
+  var hamBtn = document.querySelector('.ham');
+  mob.classList.toggle('open', mobOpen);
+  document.body.style.overflow = mobOpen ? 'hidden' : '';
+  if (hamBtn) hamBtn.setAttribute('aria-expanded', mobOpen ? 'true' : 'false');
+}
+// Close on outside tap (mobile)
+document.addEventListener('click', function(e) {
+  if (!mobOpen) return;
+  if (!e.target.closest('#mob') && !e.target.closest('.ham')) {
+    toggleMob();
+  }
+}, { passive: true });
+// Close mob-items (navigation)
+document.querySelectorAll('.mob-it').forEach(function(el) {
+  el.addEventListener('click', function() { toggleMob(); });
+});
+
+/* ============================================================
+   TEST FORM
+============================================================ */
+async function launch() {
+  var url = (document.getElementById('t-url').value || '').trim();
+  var sim = document.getElementById('t-sim').checked;
+  if (!url) { alert('Lütfen web sitenizin adresini yazın.\nÖrnek: https://ornek-siteniz.com'); return; }
+  if (!/^https?:\/\//i.test(url)) { alert('Lütfen "https://" ile başlayan tam bir adres yazın.'); return; }
+  var btn = document.getElementById('t-scan');
+  var ldr = document.getElementById('t-loader');
+  var rb  = document.getElementById('t-result');
+  var rt  = document.getElementById('t-txt');
+  btn.disabled = true;
+  rb.classList.remove('on');
+  ldr.style.display = 'block';
+  try {
+    var res = await fetch('http://127.0.0.1:8000/api/tara', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, hata_simulasyonu: sim })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var d = await res.json();
+    if (d.durum === 'basarili') {
+      rt.textContent = d.yapay_zeka_raporu;
+      rb.classList.add('on');
+      rb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      alert('❌ ' + (d.baslik || 'Hata') + '\n\n' + (d.mesaj || ''));
+    }
+  } catch (err) {
+    alert('❌ Bağlantı Kurulamadı\n\nvisionBird sunucusuna ulaşılamıyor.\n\nÇözüm: Terminalde "python api.py" komutunu çalıştırın.');
+  } finally {
+    btn.disabled = false;
+    ldr.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   AI CHAT
+============================================================ */
+var REPLIES = [
+  'En yaygın görsel hata, metin ve arka plan arasındaki düşük kontrast. WCAG AA standardı 4.5:1 oran gerektiriyor.',
+  'Mobil uyumluluk için tıklanabilir elementlerin minimum 44×44 piksel olması kritik. Küçük butonlar iOS Safari\'de sorun çıkarır.',
+  'Hata simülasyonu modu, CSS enjeksiyonuyla sitenizin kırılganlığını test eder. Üretimdeki olası görsel hataları önceden yakalar.',
+  'Tarayıcı testi: Chrome, Firefox, Edge ve Safari farklı render motorları kullanır. Aynı HTML farklı görünebilir.',
+  'Görsel regresyon: Bir değişikliğin tasarımda istemeden ne kırdığını otomatik yakalar. CI/CD\'ye ekleyin.',
+  'WCAG 2.1 AA: Renk kontrastı 4.5:1+, klavye navigasyonu, ekran okuyucu desteği. visionBird hepsini otomatik kontrol eder.',
+  'visionBird\'i GitHub Actions\'a ekleyerek her deploy\'da otomatik görsel rapor alabilirsiniz. 10 dakikada kurulum.',
+];
+var ri = 0, chatTyping = false;
+async function sendMsg() {
+  if (chatTyping) return;
+  var inp  = document.getElementById('ai-inp');
+  var msgs = document.getElementById('chat-msgs');
+  var txt  = inp.value.trim();
+  if (!txt) return;
+  msgs.innerHTML += '<div class="msg u"><div class="bubble">' + txt.replace(/</g,'&lt;') + '</div></div>';
+  inp.value = '';
+  msgs.scrollTop = msgs.scrollHeight;
+  chatTyping = true;
+  var tid = 'tp' + Date.now();
+  msgs.innerHTML += '<div class="msg bot" id="' + tid + '"><div class="bubble" style="color:#86868b;font-style:italic">yazıyor...</div></div>';
+  msgs.scrollTop = msgs.scrollHeight;
+  await new Promise(function(r) { setTimeout(r, 650 + Math.random() * 500); });
+  var el = document.getElementById(tid);
+  if (el) {
+    var b = el.querySelector('.bubble');
+    b.textContent = REPLIES[ri % REPLIES.length];
+    b.style.color = '';
+    b.style.fontStyle = '';
+  }
+  ri++;
+  chatTyping = false;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+/* ============================================================
+   iOS SCROLL FIX — prevent bounce on #mob
+============================================================ */
+if (IS_IOS) {
+  var mob = document.getElementById('mob');
+  if (mob) {
+    mob.addEventListener('touchstart', function() {}, { passive: true });
+  }
+}
+</script>
 </body>
 </html>
