@@ -1932,7 +1932,8 @@ async function launch() {
   rb.classList.remove('on');
   ldr.style.display = 'block';
   try {
-    var res = await fetch('http://127.0.0.1:8000/api/tara', {
+    // YENİ HALİ (Böyle değiştireceksin):
+var res = await fetch('https://visionbird-api.onrender.com/api/tara', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: url, hata_simulasyonu: sim })
