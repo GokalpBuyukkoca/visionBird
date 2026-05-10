@@ -1,40 +1,34 @@
+# Daha stabil bir temel imaj seçiyoruz
 FROM python:3.11-slim
 
+# Çalışma klasörü
 WORKDIR /app
 
-# Sistem bağımlılıklarını kuruyoruz
-RUN apt-get update && apt-get install -y \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    librandr2 \
-    libgbm1 \
-    libasound2 \
-    libpangocairo-1.0-0 \
-    libpango-1.0-0 \
-    libcairo2 \
-    && rm -rf /var/lib/apt/lists/*
+# Pip'i güncelliyoruz
+RUN pip install --upgrade pip
 
+# Gereksinimleri kopyalayıp kuruyoruz
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Playwright ve tarayıcıyı kuruyoruz
+# --- İŞTE BURASI KRİTİK ---
+# Önce Playwright'ı kuruyoruz
 RUN playwright install chromium
-RUN playwright install-deps
 
+# Sonra Playwright'ın kendi sistem komutuyla TÜM eksik kütüphaneleri 
+# (libnss3, libgbm1 vb.) otomatik olarak sisteme kurduruyoruz.
+# 'apt-get update' hatalarını bu komut kendi içinde çözer.
+RUN playwright install-deps
+# --------------------------
+
+# Proje dosyalarını kopyalıyoruz
 COPY . .
 
-# İŞTE KRİTİK NOKTA: Portu ve anahtarı Docker içinde tanımlıyoruz
+# Portu tanımlıyoruz
 ENV PORT=8000
-# Buraya dokunmuyoruz, Render bunu kendi dolduracak
+
+# API anahtarını Docker'a tanıtıyoruz (Render'daki isimle birebir aynı olmalı)
 ENV GEMINI_API_ANAHARTARI2=$GEMINI_API_ANAHARTARI2
 
+# Uygulamayı başlatıyoruz
 CMD uvicorn api:app --host 0.0.0.0 --port $PORT
