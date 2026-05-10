@@ -1933,7 +1933,7 @@ async function launch() {
   ldr.style.display = 'block';
   try {
     // YENİ HALİ (Böyle değiştireceksin):
-var res = await fetch('https://visionbird-api.onrender.com/api/tara', {
+var res = await fetch('https://visionbird-docker.onrender.com/api/tara', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: url, hata_simulasyonu: sim })
