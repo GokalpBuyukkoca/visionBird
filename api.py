@@ -60,7 +60,7 @@ def visionbird_tara(istek: TestIstegi):
         img = PIL.Image.open(screenshot_path)
         
         # --- DİKKAT: ANAHTARINI BURAYA YAZIYORSUN ---
-        api_anahtari = os.environ.get("GEMINI_API_KEY2")
+        api_anahtari = os.environ.get("GEMINI_API_ANAHTARI2")
         
         client = genai.Client(api_key=api_anahtari)
         
