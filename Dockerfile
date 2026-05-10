@@ -1,21 +1,40 @@
-# Resmi Python işletim sistemini indiriyoruz
 FROM python:3.11-slim
 
-# Çalışma masamızı kuruyoruz
 WORKDIR /app
-ARG GEMINI_API_ANAHARTARI2
-ENV GEMINI_API_ANAHARTARI2=$GEMINI_API_ANAHARTARI2
 
-# Alışveriş listemizi verip kütüphaneleri yüklüyoruz
+# Sistem bağımlılıklarını kuruyoruz
+RUN apt-get update && apt-get install -y \
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    librandr2 \
+    libgbm1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libpango-1.0-0 \
+    libcairo2 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# İŞTE SİHİR BURADA! En yetkili kişi olarak (Root) Chrome'u ve eksik tüm dosyaları zorla kuruyoruz
+# Playwright ve tarayıcıyı kuruyoruz
 RUN playwright install chromium
 RUN playwright install-deps
 
-# Kodlarımızın tamamını kopyalıyoruz
 COPY . .
 
-# Bulutun bize verdiği Port ile motoru ateşliyoruz
-CMD uvicorn api:app --host 0.0.0.0 --port ${PORT:-8000}
+# İŞTE KRİTİK NOKTA: Portu ve anahtarı Docker içinde tanımlıyoruz
+ENV PORT=8000
+# Buraya dokunmuyoruz, Render bunu kendi dolduracak
+ENV GEMINI_API_ANAHARTARI2=$GEMINI_API_ANAHARTARI2
+
+CMD uvicorn api:app --host 0.0.0.0 --port $PORT
