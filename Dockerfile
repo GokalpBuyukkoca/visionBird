@@ -3,6 +3,8 @@ FROM python:3.11-slim
 
 # Çalışma masamızı kuruyoruz
 WORKDIR /app
+ARG GEMINI_API_ANAHARTARI2
+ENV GEMINI_API_ANAHARTARI2=$GEMINI_API_ANAHARTARI2
 
 # Alışveriş listemizi verip kütüphaneleri yüklüyoruz
 COPY requirements.txt .
