@@ -191,22 +191,107 @@ input,textarea{font-family:var(--ft)}
   position:fixed;inset:0;z-index:790;
   background:rgba(255,255,255,.98);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  padding:calc(var(--nh) + 1.5rem) 1.5rem 2rem;
+  padding:calc(var(--nh) + 1.2rem) 1.5rem 3rem;
   flex-direction:column;gap:0;overflow-y:auto;
   display:none;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
 }
 #mob.open{display:flex}
-.mob-it{
-  font-family:var(--fd);font-size:1.5rem;font-weight:600;
-  padding:.7rem 0;border-bottom:.5px solid rgba(0,0,0,.07);
+
+/* ---- ACCORDION SECTION ---- */
+.mob-sec{border-bottom:.5px solid rgba(0,0,0,.07)}
+.mob-head{
+  font-family:var(--fd);font-size:1.35rem;font-weight:600;
+  padding:.8rem 0;
   display:flex;justify-content:space-between;align-items:center;
-  color:var(--bk);
+  color:var(--bk);cursor:pointer;
+  min-height:52px;-webkit-tap-highlight-color:transparent;
+  user-select:none;-webkit-user-select:none;
 }
-.mob-auth{display:flex;gap:.75rem;margin-top:1.75rem}
-.mob-auth .btn-pill{flex:1;padding:.75rem;font-size:.9rem;border-radius:980px;border:none;text-align:center}
+.mob-head:active{opacity:.7}
+.mob-arr{
+  font-size:.95rem;font-weight:400;color:var(--mu);
+  transition:transform .25s cubic-bezier(.4,0,.2,1);
+  flex-shrink:0;margin-left:.5rem;
+  display:inline-block;
+}
+.mob-sec.open .mob-arr{transform:rotate(90deg)}
+
+/* ---- SUB PANEL ---- */
+.mob-panel{
+  max-height:0;overflow:hidden;
+  transition:max-height .38s cubic-bezier(.16,1,.3,1);
+}
+.mob-panel.open{max-height:1200px}
+.mob-panel-in{padding-bottom:1rem}
+
+/* ---- SUB GROUP (Uygulaması / Bulutu) ---- */
+.mob-grp{margin-bottom:.85rem}
+.mob-grp-h{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.45rem 0 .3rem;
+}
+.mob-grp-ico{
+  width:32px;height:32px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.mob-grp-nm{font-family:var(--fd);font-size:.95rem;font-weight:600}
+.mob-grp-d{font-size:.75rem;color:var(--mu);margin-bottom:.55rem;padding-left:.25rem;line-height:1.4}
+
+/* ---- SUB LINKS ---- */
+.mob-links{display:flex;flex-direction:column}
+.mob-lnk{
+  font-size:.9rem;color:var(--mu);
+  padding:.55rem .25rem .55rem 1rem;
+  border-bottom:.5px solid rgba(0,0,0,.04);
+  display:flex;align-items:center;gap:.55rem;
+  min-height:44px;transition:color .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.mob-lnk:last-child{border-bottom:none}
+.mob-lnk:active{color:var(--bl)}
+.mob-lnk svg{width:14px;height:14px;opacity:.5;flex-shrink:0}
+
+/* ---- CARD-STYLE ITEM (Kapsamı / Erişebilirlik) ---- */
+.mob-card{
+  display:flex;align-items:flex-start;gap:.65rem;
+  padding:.6rem .25rem;border-bottom:.5px solid rgba(0,0,0,.04);
+  min-height:52px;
+}
+.mob-card:last-child{border-bottom:none}
+.mob-card-ico{
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.mob-card-t{font-family:var(--fd);font-size:.88rem;font-weight:600;margin-bottom:.12rem}
+.mob-card-d{font-size:.74rem;color:var(--mu);line-height:1.35}
+
+/* ---- SEPARATOR ---- */
+.mob-sep{border:none;border-top:.5px solid rgba(0,0,0,.07);margin:.55rem 0}
+
+/* ---- SOCIAL ROW (Topluluk) ---- */
+.mob-soc{
+  display:flex;flex-wrap:wrap;gap:.5rem;
+  padding:.6rem 0;
+}
+.mob-soc-lnk{
+  display:flex;align-items:center;gap:.35rem;
+  font-size:.85rem;color:var(--mu);
+  padding:.35rem .65rem;border-radius:8px;
+  background:var(--gr);
+  min-height:36px;-webkit-tap-highlight-color:transparent;
+}
+.mob-soc-lnk svg{width:16px;height:16px}
+.mob-soc-lnk:active{background:rgba(0,0,0,.1)}
+
+/* ---- AUTH BUTTONS ---- */
+.mob-auth{display:flex;gap:.75rem;margin-top:1.5rem}
+.mob-auth .btn-pill{flex:1;padding:.8rem;font-size:.9rem;border-radius:980px;border:none;text-align:center;min-height:48px}
 .btn-od{
-  flex:1;padding:.75rem;font-size:.9rem;border-radius:980px;
-  border:1.5px solid var(--bk);background:none;color:var(--bk);transition:all .18s;text-align:center;
+  flex:1;padding:.8rem;font-size:.9rem;border-radius:980px;
+  border:1.5px solid var(--bk);background:none;color:var(--bk);
+  transition:all .18s;text-align:center;min-height:48px;
 }
 .btn-od:hover{background:var(--bk);color:var(--wh)}
 
@@ -729,8 +814,7 @@ section{padding:5.5rem 1.5rem}
   border:1px solid rgba(0,0,0,.1);border-radius:980px;
   padding:.48rem .85rem;outline:none;transition:border-color .18s;
   min-height:38px;
-  appearance: none;
--webkit-appearance: none;
+  -webkit-appearance:none;
 }
 .ai-inp:focus{border-color:var(--bl)}
 .ai-snd{
@@ -1017,12 +1101,148 @@ footer{
 </div>
 </nav>
 
-<!-- MOBILE OVERLAY -->
+<!-- MOBILE OVERLAY — Accordion -->
 <div id="mob" role="dialog" aria-modal="true" aria-label="Mobil Menü">
-  <div class="mob-it">Ürünler <span>›</span></div>
-  <div class="mob-it">Dokümanlar <span>›</span></div>
-  <div class="mob-it">Topluluk <span>›</span></div>
-  <div class="mob-it">Şirket <span>›</span></div>
+
+  <!-- ÜRÜNLER -->
+  <div class="mob-sec">
+    <div class="mob-head" onclick="mobToggle(this)" role="button" aria-expanded="false">
+      Ürünler <span class="mob-arr">›</span>
+    </div>
+    <div class="mob-panel">
+      <div class="mob-panel-in">
+
+        <!-- visionBird Uygulaması -->
+        <div class="mob-grp">
+          <div class="mob-grp-h">
+            <div class="mob-grp-ico ico-g"><svg viewBox="0 0 24 24" fill="none" stroke="#00b464" stroke-width="1.8" width="17" height="17"><path d="M12 2C8 2 4 5.5 4 9c0 4.5 4 8 4 11h8c0-3 4-6.5 4-11 0-3.5-4-7-8-7z"/><circle cx="12" cy="9" r="2.5" fill="#00b464" stroke="none"/></svg></div>
+            <div class="mob-grp-nm">visionBird Uygulaması</div>
+          </div>
+          <div class="mob-grp-d">Modern uygulamalarınızı açık kaynaklı uygulamamızla test edin</div>
+          <div class="mob-links">
+            <a href="#" class="mob-lnk"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="12" height="9" rx="2"/><line x1="4" y1="13" x2="10" y2="13"/><line x1="7" y1="11" x2="7" y2="13"/></svg>Tarayıcı Testi</a>
+            <a href="#" class="mob-lnk"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M2 7h7M2 10h5"/></svg>Test Oluştur</a>
+            <a href="#" class="mob-lnk"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><line x1="7" y1="4" x2="7" y2="7"/><line x1="7" y1="9" x2="7" y2="10"/></svg>Görsel Hata Ayıklama</a>
+            <a href="#" class="mob-lnk"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L7 7.5l-2.6 1.4.5-2.9-2.1-2 2.9-.4z"/></svg>Esneme Direnci</a>
+          </div>
+        </div>
+
+        <hr class="mob-sep">
+
+        <!-- visionBird Bulutu -->
+        <div class="mob-grp">
+          <div class="mob-grp-h">
+            <div class="mob-grp-ico ico-b"><svg viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.8" width="17" height="17"><path d="M18 10a6 6 0 10-11.9.5A5 5 0 006 20h12a4 4 0 000-8v-.5z"/></svg></div>
+            <div class="mob-grp-nm">visionBird Bulutu</div>
+          </div>
+          <div class="mob-grp-d">Her sürümde testlerinizi tam bir güvenle ölçeklendirin</div>
+          <div class="mob-links">
+            <a href="#" class="mob-lnk"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg>Görsel İncelemeler</a>
+            <a href="#" class="mob-lnk"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M7 3v4l2.5 1.5"/></svg>Akıllı Orkestrasyon</a>
+            <a href="#" class="mob-lnk"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,10 4,7 7,9 10,4 12,6"/></svg>Analizler &amp; İçgörüler</a>
+            <a href="#" class="mob-lnk"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3" cy="7" r="2"/><circle cx="11" cy="3" r="2"/><circle cx="11" cy="11" r="2"/><line x1="5" y1="6.2" x2="9" y2="4.2"/><line x1="5" y1="7.8" x2="9" y2="9.8"/></svg>İş Akışı Entegrasyonları</a>
+          </div>
+        </div>
+
+        <hr class="mob-sep">
+
+        <!-- Kapsamı & Erişebilirlik -->
+        <div class="mob-card">
+          <div class="mob-card-ico ico-o"><svg viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="1.8" width="16" height="16"><rect x="2" y="2" width="9" height="9" rx="2"/><rect x="13" y="2" width="9" height="9" rx="2"/><rect x="2" y="13" width="9" height="9" rx="2"/><rect x="13" y="13" width="9" height="9" rx="2"/></svg></div>
+          <div><div class="mob-card-t">Kullanıcı Arayüzü Kapsamı</div><div class="mob-card-d">Test eksikliklerini anında tespit edin</div></div>
+        </div>
+        <div class="mob-card">
+          <div class="mob-card-ico ico-v"><svg viewBox="0 0 24 24" fill="none" stroke="#5856d6" stroke-width="1.8" width="16" height="16"><circle cx="12" cy="7" r="4"/><path d="M2 21c0-5 4.5-8 10-8s10 3 10 8"/></svg></div>
+          <div><div class="mob-card-t">Erişebilirlik</div><div class="mob-card-d">Her testte otomatik kontrol</div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- DOKÜMANLAR -->
+  <div class="mob-sec">
+    <div class="mob-head" onclick="mobToggle(this)" role="button" aria-expanded="false">
+      Dokümanlar <span class="mob-arr">›</span>
+    </div>
+    <div class="mob-panel">
+      <div class="mob-panel-in">
+        <div class="mob-grp">
+          <div class="mob-grp-nm" style="padding:.45rem 0 .25rem;font-size:.95rem">📖 Dokümantasyon</div>
+          <div class="mob-grp-d">VisionBird ile kodunuzu nasıl test edeceğinizi öğrenin</div>
+        </div>
+        <hr class="mob-sep">
+        <div class="mob-grp">
+          <div class="mob-grp-nm" style="padding:.45rem 0 .25rem;font-size:.95rem">🚀 Başlarken</div>
+          <div class="mob-links">
+            <a href="#" class="mob-lnk">visionBird indir</a>
+            <a href="#" class="mob-lnk">İlk testini yaz</a>
+            <a href="#" class="mob-lnk">Uygulamanı test et</a>
+          </div>
+        </div>
+        <hr class="mob-sep">
+        <div class="mob-grp">
+          <div class="mob-grp-nm" style="padding:.45rem 0 .25rem;font-size:.95rem">📚 Referanslar</div>
+          <div class="mob-links">
+            <a href="#" class="mob-lnk">API</a>
+            <a href="#" class="mob-lnk">Yapılandırma</a>
+            <a href="#" class="mob-lnk">En İyi Uygulamalar</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPLULUK -->
+  <div class="mob-sec">
+    <div class="mob-head" onclick="mobToggle(this)" role="button" aria-expanded="false">
+      Topluluk <span class="mob-arr">›</span>
+    </div>
+    <div class="mob-panel">
+      <div class="mob-panel-in">
+        <div class="mob-grp">
+          <div class="mob-grp-nm" style="padding:.45rem 0 .25rem;font-size:.95rem">✍️ Blog</div>
+          <div class="mob-grp-d">En iyi uygulamalar, içgörüler &amp; ve fazlası</div>
+        </div>
+        <hr class="mob-sep">
+        <div class="mob-grp">
+          <div class="mob-grp-nm" style="padding:.45rem 0 .25rem;font-size:.95rem">🏷️ Konular</div>
+          <div class="mob-links">
+            <a href="#" class="mob-lnk">Yayınlar</a>
+            <a href="#" class="mob-lnk">Topluluk</a>
+            <a href="#" class="mob-lnk">Eğitim</a>
+            <a href="#" class="mob-lnk">Şirket</a>
+            <a href="#" class="mob-lnk">Müşteri Mağazaları</a>
+          </div>
+        </div>
+        <hr class="mob-sep">
+        <div class="mob-soc">
+          <a href="#" class="mob-soc-lnk"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>Github</a>
+          <a href="#" class="mob-soc-lnk"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37.07.07 0 003.645 4.397C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>Discord</a>
+          <a href="#" class="mob-soc-lnk"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>YouTube</a>
+          <a href="#" class="mob-soc-lnk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Takvim</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ŞİRKET -->
+  <div class="mob-sec">
+    <div class="mob-head" onclick="mobToggle(this)" role="button" aria-expanded="false">
+      Şirket <span class="mob-arr">›</span>
+    </div>
+    <div class="mob-panel">
+      <div class="mob-panel-in">
+        <div class="mob-grp">
+          <div class="mob-grp-nm" style="padding:.45rem 0 .25rem;font-size:.95rem">🌐 visionBird Hakkında</div>
+          <div class="mob-grp-d">Yeni nesil testleri destekle</div>
+          <a href="#" class="mob-lnk" style="color:var(--bl);padding-left:.25rem">Daha Fazla Bilgi →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH -->
   <div class="mob-auth">
     <button class="btn-pill" onclick="toggleMob()">Üye Ol</button>
     <button class="btn-od" onclick="toggleMob()">Giriş Yap</button>
@@ -1620,25 +1840,33 @@ var IS_MOBILE = /iPhone|iPad|iPod|Android|Mobile|BlackBerry|IEMobile|Opera Mini/
 var IS_IOS = /iPhone|iPad|iPod/i.test(UA);
 var LOW_END = (navigator.hardwareConcurrency || 4) <= 2;
 var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-var USE_GL = !IS_MOBILE && !LOW_END && !REDUCED && typeof THREE !== 'undefined';
+/* WebGL desteklenip desteklenmediğini test et */
+var CAN_GL = (function() {
+  try {
+    var c = document.createElement('canvas');
+    return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')));
+  } catch(e) { return false; }
+})();
+/* Masaüstü: tam ayarlar | Mobil: azaltılmış ayarlar | Düşük cihaz / reduced-motion: CSS fallback */
+var USE_GL  = CAN_GL && !LOW_END && !REDUCED && typeof THREE !== 'undefined';
+var MOB_GL  = USE_GL && IS_MOBILE; /* Mobilde WebGL aktif ama daha az parçacık */
 
 /* ============================================================
-   CSS HERO DOTS (Mobile/Fallback)
+   CSS HERO DOTS — Sadece WebGL tamamen başarısızsa göster
 ============================================================ */
 if (!USE_GL) {
   document.getElementById('hero-canvas').style.display = 'none';
   var dd = document.getElementById('hero-dots');
   if (dd) {
-    for (var i = 0; i < 12; i++) {
+    for (var i = 0; i < 14; i++) {
       var d = document.createElement('div');
       d.className = 'hero-dot';
-      var sz = (Math.random() * 4 + 2) + 'px';
+      var sz = (Math.random() * 5 + 2) + 'px';
       d.style.cssText = [
-        'width:' + sz,
-        'height:' + sz,
+        'width:' + sz, 'height:' + sz,
         'left:' + (Math.random() * 100) + '%',
-        'top:' + (Math.random() * 100) + '%',
-        'animation-delay:' + (Math.random() * 3) + 's',
+        'top:'  + (Math.random() * 100) + '%',
+        'animation-delay:'    + (Math.random() * 3) + 's',
         'animation-duration:' + (2.5 + Math.random() * 2) + 's'
       ].join(';');
       dd.appendChild(d);
@@ -1647,78 +1875,109 @@ if (!USE_GL) {
 }
 
 /* ============================================================
-   THREE.JS — Only on capable desktop
+   THREE.JS — Masaüstü tam ayar, Mobil azaltılmış ayar
 ============================================================ */
 if (USE_GL) {
   (function () {
     var canvas = document.getElementById('hero-canvas');
     if (!canvas) return;
-    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, alpha: true, powerPreference: 'low-power' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+
+    /* Renderer — mobilde daha düşük pixel ratio */
+    var renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvas, antialias: false, alpha: true,
+        powerPreference: MOB_GL ? 'low-power' : 'default'
+      });
+    } catch(e) {
+      canvas.style.display = 'none';
+      return; /* WebGL context oluşturulamazsa sessizce çık */
+    }
+    renderer.setPixelRatio(MOB_GL ? 1 : Math.min(window.devicePixelRatio, 1.5));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0xffffff, 0);
 
-    var scene = new THREE.Scene();
+    var scene  = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 55;
 
-    var N = 700; // Reduced from 1400 for performance
+    /* Parçacık sayısı: mobilde 280, masaüstünde 700 */
+    var N = MOB_GL ? 280 : 700;
     var pos = new Float32Array(N * 3);
     var col = new Float32Array(N * 3);
     for (var i = 0; i < N; i++) {
       pos[i*3]   = (Math.random() - .5) * 140;
       pos[i*3+1] = (Math.random() - .5) * 100;
       pos[i*3+2] = (Math.random() - .5) * 80;
-      if (Math.random() < .22) {
-        col[i*3] = 0; col[i*3+1] = 113/255; col[i*3+2] = 227/255;
+      if (Math.random() < .25) {
+        col[i*3] = 0; col[i*3+1] = 113/255; col[i*3+2] = 227/255; /* mavi */
       } else {
-        col[i*3] = col[i*3+1] = col[i*3+2] = .45 + Math.random() * .25;
+        col[i*3] = col[i*3+1] = col[i*3+2] = .45 + Math.random() * .25; /* gri */
       }
     }
     var geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
-    var mat = new THREE.PointsMaterial({ size: .45, vertexColors: true, transparent: true, opacity: .5, sizeAttenuation: true });
+    /* Mobilde biraz daha büyük nokta (daha az ama daha görünür) */
+    var mat = new THREE.PointsMaterial({
+      size: MOB_GL ? 0.65 : 0.45,
+      vertexColors: true, transparent: true,
+      opacity: MOB_GL ? 0.6 : 0.5, sizeAttenuation: true
+    });
     var pts = new THREE.Points(geo, mat);
     scene.add(pts);
 
-    // Sparse lines
-    var lm = new THREE.LineBasicMaterial({ color: 0x0071e3, transparent: true, opacity: .025 });
-    for (var j = 0; j < 45; j++) {
-      var p1 = new THREE.Vector3((Math.random()-.5)*130, (Math.random()-.5)*90, (Math.random()-.5)*55);
-      var p2 = new THREE.Vector3(p1.x+(Math.random()-.5)*25, p1.y+(Math.random()-.5)*25, p1.z+(Math.random()-.5)*18);
-      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1, p2]), lm));
+    /* Bağlantı çizgileri: sadece masaüstünde (mobilde performans için atlanır) */
+    if (!MOB_GL) {
+      var lm = new THREE.LineBasicMaterial({ color: 0x0071e3, transparent: true, opacity: .025 });
+      for (var j = 0; j < 45; j++) {
+        var p1 = new THREE.Vector3((Math.random()-.5)*130,(Math.random()-.5)*90,(Math.random()-.5)*55);
+        var p2 = new THREE.Vector3(p1.x+(Math.random()-.5)*25,p1.y+(Math.random()-.5)*25,p1.z+(Math.random()-.5)*18);
+        scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1,p2]),lm));
+      }
     }
 
     var mx = 0, my = 0;
-    document.addEventListener('mousemove', function(e) {
-      mx = (e.clientX / window.innerWidth  - .5) * .2;
-      my = -(e.clientY / window.innerHeight - .5) * .16;
-    }, { passive: true });
+    /* Masaüstü: fare hareketi | Mobil: gyroscope veya dokunma */
+    if (!MOB_GL) {
+      document.addEventListener('mousemove', function(e) {
+        mx = (e.clientX / window.innerWidth  - .5) * .2;
+        my = -(e.clientY / window.innerHeight - .5) * .16;
+      }, { passive: true });
+    } else {
+      /* Mobil dokunma ile hafif paralaks */
+      document.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 0) {
+          mx = (e.touches[0].clientX / window.innerWidth  - .5) * .12;
+          my = -(e.touches[0].clientY / window.innerHeight - .5) * .1;
+        }
+      }, { passive: true });
+    }
 
     var t = 0, rafId = null, visible = true;
+    /* Mobilde daha yavaş dönsün (pil tasarrufu) */
+    var SPEED = MOB_GL ? .0012 : .0018;
 
     function tick() {
       if (!visible) return;
       rafId = requestAnimationFrame(tick);
-      t += .0018;
+      t += SPEED;
       pts.rotation.y = t * .038 + mx;
       pts.rotation.x = Math.sin(t * .07) * .035 + my * .35;
       renderer.render(scene, camera);
     }
 
-    // Pause when hero not visible (major performance fix!)
+    /* Hero görünür olmadığında render döngüsünü durdur — büyük performans kazanımı */
     var heroObs = new IntersectionObserver(function(entries) {
       visible = entries[0].isIntersecting;
       if (visible && !rafId) tick();
     }, { threshold: 0 });
     heroObs.observe(document.getElementById('hero'));
 
-    // Pause when tab not active
+    /* Sekme gizlenince durdur */
     document.addEventListener('visibilitychange', function() {
       if (document.hidden) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
+        cancelAnimationFrame(rafId); rafId = null;
       } else if (visible) {
         tick();
       }
@@ -1730,7 +1989,7 @@ if (USE_GL) {
       renderer.setSize(window.innerWidth, window.innerHeight);
     }, { passive: true });
 
-    tick(); // Start
+    tick();
   })();
 }
 
@@ -1932,8 +2191,7 @@ async function launch() {
   rb.classList.remove('on');
   ldr.style.display = 'block';
   try {
-    // YENİ HALİ (Böyle değiştireceksin):
-var res = await fetch('https://visionbird-docker.onrender.com/api/tara', {
+    var res = await fetch('https://visionbird-docker.onrender.com/api/tara', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: url, hata_simulasyonu: sim })
