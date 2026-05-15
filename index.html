@@ -17,6 +17,9 @@
   --bl:#0071e3;--bl2:#0077ed;--mu:#86868b;
   --bd:rgba(0,0,0,.1);
   --nh:52px; /* nav height */
+  --grad1:linear-gradient(135deg, #0071e3 0%, #0077ed 100%);
+  --grad2:linear-gradient(135deg, #0071e3 0%, #5856d6 100%);
+  --grad3:linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
 }
 
 /* ============================================================
@@ -42,6 +45,7 @@ input,textarea{font-family:var(--ft)}
 @keyframes sc{0%,100%{opacity:.25}50%{opacity:1}}
 @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinContinuous{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 @keyframes barGrow{from{height:0;y:attr(data-y)}to{}}
 
 .fu{opacity:0;transform:translateY(28px);will-change:opacity,transform}
@@ -120,8 +124,11 @@ input,textarea{font-family:var(--ft)}
   pointer-events:none;
   /* prevent lag by promoting to own layer */
   will-change:opacity,transform;
+  display:none;
+  z-index:900;
 }
-.nav-li:hover>.mega{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
+.nav-li:hover>.mega{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto;display:block}
+.mega[style*="display: block"]{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
 .mega-p{min-width:680px}.mega-d{min-width:500px}.mega-c{min-width:520px}.mega-s{min-width:260px}
 
 /* mega internals */
@@ -303,7 +310,7 @@ input,textarea{font-family:var(--ft)}
   min-height:100vh;min-height:100svh;
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;
-  background:var(--wh);
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f7 50%, #f0f0f5 100%);
 }
 /* CSS hero background for mobile / fallback */
 .hero-bg{
@@ -2176,6 +2183,33 @@ document.querySelectorAll('.mob-it').forEach(function(el) {
 });
 
 /* ============================================================
+   MOBILE MENU ACCORDION
+============================================================ */
+document.querySelectorAll('.mob-head').forEach(function(head) {
+  head.addEventListener('click', function() {
+    var section = head.closest('.mob-sec');
+    if (!section) return;
+    var panel = section.querySelector('.mob-panel');
+    if (!panel) return;
+    
+    var isOpen = section.classList.contains('open');
+    
+    // Kapat diğer tüm accordion'ları
+    document.querySelectorAll('.mob-sec').forEach(function(s) {
+      s.classList.remove('open');
+      var p = s.querySelector('.mob-panel');
+      if (p) p.classList.remove('open');
+    });
+    
+    // Aç eğer kapalıysa
+    if (!isOpen) {
+      section.classList.add('open');
+      panel.classList.add('open');
+    }
+  });
+});
+
+/* ============================================================
    TEST FORM
 ============================================================ */
 async function launch() {
@@ -2224,6 +2258,54 @@ var REPLIES = [
   'Görsel regresyon: Bir değişikliğin tasarımda istemeden ne kırdığını otomatik yakalar. CI/CD\'ye ekleyin.',
   'WCAG 2.1 AA: Renk kontrastı 4.5:1+, klavye navigasyonu, ekran okuyucu desteği. visionBird hepsini otomatik kontrol eder.',
   'visionBird\'i GitHub Actions\'a ekleyerek her deploy\'da otomatik görsel rapor alabilirsiniz. 10 dakikada kurulum.',
+  'Yazı tipi yükleme sorunları, sayfanın görünümünü değiştirebilir. FOUT (Flash of Unstyled Text) vs FOIT (Flash of Invisible Text) farklarını kontrol edin.',
+  'Responsive tasarımda, tablet (768px) ve mobil (320px) kesme noktalarında test etmek önemli. Her cihazda farklı sonuç çıkabilir.',
+  'Görsel Viewport Meta etiketi, mobil tarayıcılarda sayfanın nasıl render edileceğini kontrol eder. Viewport-fit: cover ile çentikli ekranları destekleyin.',
+  'SVG grafikleri responsive yaparken viewBox özniteliğini doğru ayarlamak kritik. Yanlış ayar, ekranda bozuk görünüm yaratır.',
+  'Dark mode desteği eklemeniz, kullanıcı deneyimini önemli ölçüde iyileştirir. CSS media query prefers-color-scheme ile kontrol edin.',
+  'Animasyonlar genellikle yüksek CPU tüketir. GPU hızlandırması için transform ve opacity kullanın, width/height yerine.',
+  'Webfont hızı kritiktir. Font Squirrel veya Google Fonts ile modern WOFF2 formatında optimize edilmiş yazı tipleri kullanın.',
+  'Z-index çakışmaları, özellikle modal ve dropdown menülerde sorun oluşturur. Stacking context\'i doğru yönetin.',
+  'Resim optimizasyonu: WebP formatı modern tarayıcılarda JPEG\'den %25 daha küçük. Fallback PNG ile sağlayın.',
+  'Touch target boyutu: Mobile-first tasarımda minimum 48×48 piksel hedef boyutu, masaüstü 32×32 piksel olabilir.',
+  'Form validasyonunu, kullanıcıya gerçek zamanlı geri bildirim vererek iyileştirin. Hataları nerede olduğunu gösterin.',
+  'Horizontal scroll: Responsive tasarımda en yaygın sorundur. min-width ayarlarını kontrol edin, width: 100% aşmasını engelle.',
+  'CSS Grid\'de fr (fractional unit) kullanmak, farklı ekran boyutlarında daha iyi sonuç verir. Pixel sabit değerleri çevikliği azaltır.',
+  'Mobile-first yaklaşım: Önce mobil için tasarım yapın, sonra desktop versiyonunu ekleyin. Karşıt yön daha fazla soruna yol açar.',
+  'Box shadow ve opacity, performans sorunları yaratabilir. Özellikle mobile cihazlarda, GPU hızlandırması dikkat edin.',
+  'Text rendering: -webkit-font-smoothing ve -moz-osx-font-smoothing özelleştirmesi, yazı tipi düzgünlüğünü artırır.',
+  'Scroll jank: Smooth scrolling sırasında frame drop yaşıyorsanız, will-change ve GPU layering kullanın.',
+  'Focus states: Erişilebilirlik için tüm etkileşimli elementlere uygun focus stilleri eklemeyin. :focus-visible kullanın.',
+  'Gradientler performansı etkileyebilir. Basit gradientler SVG olarak arka plan görseli yerine CSS kullanın.',
+  'Respon­sive tipografi: clamp() fonksiyonu ile yazı boyutunu viewport boyutuna göre otomatik ölçeklendir.',
+  'Masaüstü uyuyumluluğu: Modern tarayıcılar 1366×768 çözünürlüğü hedeflemelidir. Daha küçük ekranlar özel dikkat gerektirir.',
+  'CSS specificity çakışmaları: !important kullanımını minimize edin, Cascade yapısını düzgün planlayın.',
+  'Overflow hidden, içeriğin kırpılmasına neden olabilir. Scroll akslarını kontrol edin, özellikle mobilde.',
+  'Renk kombinasyonları: İki yeşil tonunun farkı engelli kullanıcılara görünmeyebilir. Yeterli kontrast emin olun.',
+  'Başlangıç yükleme süresi: Her 100ms gecikme, dönüşüm %1 azalır. Performance.now() ile ölçün.',
+  'Sticky navbars mobilde sorunlu olabilir. position: sticky\'in position: relative parent\'da çalışmasını kontrol edin.',
+  'Transition timing: Çok hızlı (< 100ms) ya da çok yavaş (> 500ms) geçişler kullanıcıyı rahatsız edebilir.',
+  'Flexbox gap: Eski tarayıcılarda desteklenmez. Margin fallback sağlayın veya CSS Grid alternatifi kullanın.',
+  'Letter spacing: Tüm küçük harflerde artırma, okunabilirliği iyileştirir. Başlıklar için azaltma daha modern görünüm verir.',
+  'Opacity yerine renk alpha: rgba() veya hsla() kullanmak, border ve shadow\'lar ile daha iyi etkileşime girer.',
+  'Hover durumları mobilde çalışmaz. Touch cihazlar için :active ve :focus durumlarını ekleyin.',
+  'Fixed positioning: Mobilde ekran kaydırması sırasında sorun oluşturabilir. Alternatif olarak sticky veya position: relative kullanın.',
+  'CSS variables: Root elementinde tanımlanarak, dinamik tema değiştirmesi kolaylaşır. JavaScript ile renk güncellemesi yapabilirsiniz.',
+  'Backdrop filter: Bulanık arka plan efekti performans sorunu yaratabilir. Mobile cihazlarda optimize edin veya devre dışı bırakın.',
+  'Line height 1.5, uzun metinler için okunabilirliği önemli ölçüde artırır. Başlıklarda 1.1-1.2 daha uygun olur.',
+  'Empty states: Sayfa hiçbir içerik olmadığında bile görsel çekici olmalı. Placeholder resimleri ve mesajları ekleyin.',
+  'Loading states: Kullanıcıya beklediğini gösterin. Skeleton screens veya spinner animasyonlar kullanılabilir.',
+  'Error states: Kırmızı renk tek başına yetersiz. Simgeler, ikon ve metinle hatayı açıkça ifade edin.',
+  'Success states: Yeşil renk standart olsa da, ikon ve animasyonlarla daha etkili yapılabilir.',
+  'Breadcrumb navigation: Sayfa hiyerarşisini gösterir. Mobilde optimize edilmiş versiyonu (kısaltılmış) sunabilirsiniz.',
+  'Pagination vs. Infinite scroll: Pagination SEO-friendly, infinite scroll daha iyi kullanıcı deneyimi verir. Tasarıma göre seçin.',
+  'Search functionality: Arama sonuçlarını real-time göstermek, araştırma sürüsünü kısaltır. Ancak performansı olumsuz etkileyebilir.',
+  'Table responsive design: Mobilde tablo göstermek zorudur. Horizontal scroll, kart görünümü veya sütun gizleme seçeneklerini kullanın.',
+  'Bağlantı renklandırması: Ziyaret edilen linkler sarı veya gri gösterilebilir. :visited pseudo-class kulllanın ama sınırlamalar var.',
+  'CTA buttons: Renk, boyut ve konumu önemli. Tıklanabilir alan minimum 44×44 piksel olmalıdır.',
+  'Social proof: Kullanıcı testimonies, rating ve review sayıları güveni artırır. Gerçek, güncel veriler kullanın.',
+  'Newsletter signup: Üç alanda fazladır. Email, bir ad ve onay butonu yeterlidir. Çok fazla alan, dönüşümü azaltır.',
+  'Footer: Önemli linkler, sosyal medya ve iletişim bilgileri içermelidir. Mobilde de erişilebilir olmalıdır.'
 ];
 var ri = 0, chatTyping = false;
 async function sendMsg() {
@@ -2253,8 +2335,42 @@ async function sendMsg() {
 }
 
 /* ============================================================
-   iOS SCROLL FIX — prevent bounce on #mob
+   DESKTOP MEGA MENU CLICK HANDLER
 ============================================================ */
+document.querySelectorAll('.nav-li').forEach(function(li) {
+  var navBtn = li.querySelector('.nav-btn');
+  if (!navBtn) return;
+  
+  navBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    var mega = li.querySelector('.mega');
+    if (!mega) return;
+    
+    // Kapalı hepsini aç
+    document.querySelectorAll('.nav-li').forEach(function(item) {
+      if (item !== li) {
+        var m = item.querySelector('.mega');
+        if (m) m.style.display = 'none';
+      }
+    });
+    
+    // Toggle
+    if (mega.style.display === 'block') {
+      mega.style.display = 'none';
+    } else {
+      mega.style.display = 'block';
+    }
+  });
+});
+
+// Menü dışında tıklama kapatır
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.nav-li')) {
+    document.querySelectorAll('.mega').forEach(function(m) {
+      m.style.display = 'none';
+    });
+  }
+});
 if (IS_IOS) {
   var mob = document.getElementById('mob');
   if (mob) {
