@@ -1,87 +1,74 @@
 import os
-import time
-from fastapi import FastAPI, HTTPException
+import base64
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from playwright.sync_api import sync_playwright
-from google import genai
-import PIL.Image
+from playwright.async_api import async_playwright
+from openai import OpenAI
 
-# FastAPI uygulamasını başlatıyoruz
-app = FastAPI(title="visionBird API", description="Otonom QA Test Sunucusu")
+app = FastAPI()
 
-# --- GÜVENLİK (CORS) KAPILARI AÇIK ---
+# CORS İzinleri (Vercel bağlantısının hatasız çalışması için kesinlikle şart)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"], 
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class TestIstegi(BaseModel):
+class UrlRequest(BaseModel):
     url: str
-    hata_simulasyonu: bool = False
 
 @app.post("/api/tara")
-def visionbird_tara(istek: TestIstegi):
-    hedef_url = istek.url
-    screenshot_path = "visionbird_rapor.png"
-    
-    print(f"🚀 API Tetiklendi! Hedef: {hedef_url} | Simülasyon: {istek.hata_simulasyonu}")
-
+async def tara(request: UrlRequest):
     try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page(bypass_csp=True)
+        # 1. Aşama: Playwright ile ekran görüntüsü alma
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+            page = await browser.new_page()
+            await page.set_viewport_size({"width": 1280, "height": 800})
             
-            page.goto(hedef_url)
-            time.sleep(2)
+            # Siteye gidiyoruz
+            await page.goto(request.url, wait_until="domcontentloaded", timeout=30000)
             
-            if istek.hata_simulasyonu:
-                css_sabotaji = """
-                    h1 {
-                        font-size: 150px !important;
-                        color: magenta !important;
-                        line-height: 0.5 !important;
-                        position: relative !important;
-                        z-index: 9999 !important;
-                    }
-                """
-                page.add_style_tag(content=css_sabotaji)
-                time.sleep(0.5)
+            # Fotoğrafı hafızaya jpeg olarak sıkıştırıp alıyoruz
+            screenshot_bytes = await page.screenshot(type="jpeg", quality=80)
+            await browser.close()
             
-            page.screenshot(path=screenshot_path, full_page=True)
-            browser.close()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Tarayıcı motoru çöktü: {str(e)}")
+            # OpenAI'ın anlayacağı base64 formatına çeviriyoruz
+            base64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
 
-    try:
-        img = PIL.Image.open(screenshot_path)
+        # 2. Aşama: OpenAI Bağlantısı
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            return {"durum": "HATA", "analiz": "Sunucu hatası: OpenAI API anahtarı Render üzerinde bulunamadı."}
+
+        client = OpenAI(api_key=api_key)
         
-        # --- DİKKAT: ANAHTARINI BURAYA YAZIYORSUN ---
-        api_anahtari = os.environ.get("GEMINI_API_ANAHTARI2")
-        
-        client = genai.Client(api_key=api_anahtari)
-        
-        prompt = """
-        Sen visionBird adında bir QA mühendisisin. 
-        Aşağıdaki web sitesi arayüzünü incele. Metinlerin okunabilirliği, üst üste binen elementler ve marka bütünlüğünü bozan aşırı büyük/renkli hatalar var mı? 
-        Kısa, net ve profesyonel bir rapor yaz.
-        """
-        
-        response = client.models.generate_content(
-            model='gemini-2.0-flash',
-            contents=[prompt, img]
+        # gpt-4o-mini modeline fotoğrafı ve talimatı gönderiyoruz
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text", 
+                            "text": "Sen uzman bir UI/UX tasarımcısısın. Sana gönderilen bu web sitesi ekran görüntüsünü dikkatlice incele. Varsa arayüz hatalarını, metin taşmalarını, hizalama kusurlarını tespit et ve kullanıcıya Türkçe, profesyonel, maddeler halinde bir iyileştirme raporu sun."
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+                        }
+                    ]
+                }
+            ],
+            max_tokens=600
         )
-        rapor = response.text
         
-    except Exception as e:
-        rapor = f"⚠️ YEDEK RAPOR OLUŞTURULDU (Hata Nedeni: {str(e)}) - Arayüzde devasa boyutlarda metin taşmaları tespit edildi!"
+        return {"durum": "BAŞARILI", "analiz": response.choices[0].message.content}
 
-    return {
-        "durum": "basarili",
-        "hedef": hedef_url,
-        "mesaj": "Analiz tamamlandı. Fotoğraf sunucuya kaydedildi.",
-        "yapay_zeka_raporu": rapor
-    }
+    except Exception as e:
+        # Olası bir hatada sistemin çökmesini önleyip arayüze hata detayını gönderiyoruz
+        return {"durum": "HATA", "analiz": f"Analiz sırasında bir hata oluştu: {str(e)}"}
