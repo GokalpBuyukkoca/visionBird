@@ -21,14 +21,14 @@ RUN playwright install chromium
 RUN playwright install-deps
 # --------------------------
 
-# Proje dosyalarını kopyalıyoruz
+# ... üstteki komutlar (playwright kurulumları vs.) aynı kalıyor ...
+
 COPY . .
 
-# Portu tanımlıyoruz
+# Sadece Port kalıyor
 ENV PORT=8000
 
-# API anahtarını Docker'a tanıtıyoruz (Render'daki isimle birebir aynı olmalı)
-ENV GEMINI_API_ANAHARTARI2=$GEMINI_API_ANAHARTARI2
+# OpenAI şifresini buluttan (Render'dan) geldiği gibi direkt içeri aktarıyoruz
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
 
-# Uygulamayı başlatıyoruz
 CMD uvicorn api:app --host 0.0.0.0 --port $PORT
