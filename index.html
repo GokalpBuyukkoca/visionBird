@@ -2210,40 +2210,54 @@ document.querySelectorAll('.mob-it').forEach(function(el) {
    TEST FORM
 ============================================================ */
 async function launch() {
-  var url = (document.getElementById('t-url').value || '').trim();
-  var sim = document.getElementById('t-sim').checked;
-  if (!url) { alert('Lütfen web sitenizin adresini yazın.\nÖrnek: https://ornek-siteniz.com'); return; }
-  if (!/^https?:\/\//i.test(url)) { alert('Lütfen "https://" ile başlayan tam bir adres yazın.'); return; }
-  var btn = document.getElementById('t-scan');
-  var ldr = document.getElementById('t-loader');
-  var rb  = document.getElementById('t-result');
-  var rt  = document.getElementById('t-txt');
-  btn.disabled = true;
-  rb.classList.remove('on');
-  ldr.style.display = 'block';
-  try {
-    var res = await fetch('https://visionbird-docker.onrender.com/api/tara', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url, hata_simulasyonu: sim })
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var d = await res.json();
-    if (d.durum === 'basarili') {
-      rt.textContent = d.yapay_zeka_raporu;
-      rb.classList.add('on');
-      rb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    } else {
-      alert('❌ ' + (d.baslik || 'Hata') + '\n\n' + (d.mesaj || ''));
-    }
-  } catch (err) {
-    alert('❌ Bağlantı Kurulamadı\n\nvisionBird sunucusuna ulaşılamıyor.\n\nÇözüm: Terminalde "python api.py" komutunu çalıştırın.');
-  } finally {
-    btn.disabled = false;
-    ldr.style.display = 'none';
-  }
-}
+    var rb = document.getElementById('t-result');
+    var rt = document.getElementById('t-txt');
+    btn.disabled = true;
+    rb.classList.remove('on');
+    ldr.style.display = 'block';
+    
+    // HTML'deki input alanından kullanıcının yazdığı linki alıyoruz
+    // Kodunun yukarısında linki alan değişken hangisiyse (url mi, urlInput mu) ona göre ayarla. 
+    // Fotoğrafa göre 'url' gibi duruyor.
+    var siteUrl = typeof url !== 'undefined' ? url : (document.getElementById('site-url') ? document.getElementById('site-url').value : '');
 
+    try {
+        // Doğru ve güncel OpenAI Docker sunucu adresinize istek atıyoruz
+        const response = await fetch('https://visionbird-api.onrender.com/api/tara', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                url: siteUrl,
+                hata_simulasyonu: typeof sim !== 'undefined' ? sim : false 
+            })
+        });
+
+        if (!response.ok) throw new Error('HTTP hatası: ' + response.status);
+
+        const d = await response.json();
+        console.log("Sunucudan Gelen Veri:", d);
+
+        // Python backend'den gelen "BAŞARILI" durumunu ve "analiz" metnini yakalıyoruz
+        if (d.durum === "BAŞARILI" || d.analiz) {
+            // OpenAI'dan gelen markdown formatındaki veya düz metindeki raporu ekrana basıyoruz
+            rt.innerHTML = d.analiz.replace(/\n/g, '<br>');
+            rb.classList.add('on');
+            rb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            alert("🎉 Analiz Başarıyla Tamamlandı! Raporunuz hazır.");
+        } else {
+            // Eğer backend bir şekilde HATA döndüyse detayını gösterelim
+            alert('❌ Analiz Hatası:\n\n' + (d.analiz || 'Bilinmeyen bir hata oluştu.'));
+        }
+
+    } catch (err) {
+        console.error("Bağlantı Hatası:", err);
+        alert('❌ Sunucu Bağlantı Hatası\n\nvisionBird sunucusuna ulaşılamıyor veya işlem zaman aşımına uğradı.');
+    } finally {
+        btn.disabled = false;
+        ldr.style.display = 'none';
+    }
+}
 /* ============================================================
    AI CHAT
 ============================================================ */
