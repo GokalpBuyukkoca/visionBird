@@ -2,8 +2,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Pip'i güncelliyoruz
-RUN pip install --upgrade pip
+# İşletim sistemine doğrudan Chromium kuruyoruz
+RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
+# ... Geri kalan Dockerfile kodun AYNEN devam ediyor ...
 
 # Gereksinimleri kopyalayıp kuruyoruz
 COPY requirements.txt .

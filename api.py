@@ -20,24 +20,37 @@ app.add_middleware(
 class UrlRequest(BaseModel):
     url: str
 
+# ... önceki kodlar (importlar, app tanımı vs.) aynı ...
+
 @app.post("/api/tara")
 async def tara(request: UrlRequest):
     try:
         # 1. Aşama: Playwright ile ekran görüntüsü alma
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+            # 🚨 İŞTE KRİTİK DEĞİŞİKLİK BURADA: 
+            # executable_path ile tarayıcının tam konumunu gösteriyoruz.
+            # Dockerfile'da PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers tanımladığımız için
+            # chromium tarayıcısı büyük ihtimalle aşağıdaki yolda olacak.
+            
+            browser = await p.chromium.launch(
+                headless=True, 
+                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+                # executable_path parametresini ekliyoruz. 
+                # Not: Bu yol Render'daki Debian tabanlı imaj için genellikle doğrudur.
+                executable_path="/usr/bin/google-chrome-stable" # VEYA "/usr/bin/chromium" olabilir.
+            )
+            
             page = await browser.new_page()
             await page.set_viewport_size({"width": 1280, "height": 800})
             
-            # Siteye gidiyoruz
             await page.goto(request.url, wait_until="domcontentloaded", timeout=30000)
             
-            # Fotoğrafı hafızaya jpeg olarak sıkıştırıp alıyoruz
             screenshot_bytes = await page.screenshot(type="jpeg", quality=80)
             await browser.close()
             
-            # OpenAI'ın anlayacağı base64 formatına çeviriyoruz
             base64_image = base64.b64encode(screenshot_bytes).decode('utf-8')
+
+        # ... 2. Aşama (OpenAI Bağlantısı) aynı şekilde devam ediyor ...
 
         # 2. Aşama: OpenAI Bağlantısı
         api_key = os.environ.get("OPENAI_API_KEY")
