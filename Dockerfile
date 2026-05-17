@@ -1,7 +1,5 @@
-# Daha stabil bir temel imaj seçiyoruz
 FROM python:3.11-slim
 
-# Çalışma klasörü
 WORKDIR /app
 
 # Pip'i güncelliyoruz
@@ -11,24 +9,20 @@ RUN pip install --upgrade pip
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- İŞTE BURASI KRİTİK ---
-# Önce Playwright'ı kuruyoruz
+# 🚨 İŞTE EN KRİTİK ADIM: 
+# Playwright'a tarayıcıları geçici klasörlere değil, projenin tam içine kurmasını söylüyoruz.
+# Böylece Render sistemi ayağa kaldırdığında tarayıcıyı asla kaybetmeyecek.
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers
+
+# Şimdi kurduruyoruz
 RUN playwright install chromium
-
-# Sonra Playwright'ın kendi sistem komutuyla TÜM eksik kütüphaneleri 
-# (libnss3, libgbm1 vb.) otomatik olarak sisteme kurduruyoruz.
-# 'apt-get update' hatalarını bu komut kendi içinde çözer.
 RUN playwright install-deps
-# --------------------------
-
-# ... üstteki komutlar (playwright kurulumları vs.) aynı kalıyor ...
 
 COPY . .
 
-# Sadece Port kalıyor
 ENV PORT=8000
-
-# OpenAI şifresini buluttan (Render'dan) geldiği gibi direkt içeri aktarıyoruz
 ENV OPENAI_API_KEY=$OPENAI_API_KEY
+# Koddaki Playwright'ın da bu yolu okuması için Docker seviyesinde sabitliyoruz
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers
 
 CMD uvicorn api:app --host 0.0.0.0 --port $PORT
